@@ -423,6 +423,10 @@ main { width: min(1180px, calc(100% - 48px)); margin: auto; padding: 0 0 110px; 
 .social-profile-section .section-heading h3 { margin: 3px 0 0; font: 500 25px "Newsreader", serif; }
 .profile-grid, .profile-listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
 .profile-post-tile, .profile-listing-card { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
+.profile-post-tile { padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; }
+.profile-post-tile:hover, .profile-post-tile:focus-visible { transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+.profile-post-tile:disabled { cursor: default; }
+.profile-post-tile:disabled:hover { transform: none; box-shadow: none; }
 .profile-post-tile > img, .profile-listing-card > img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--sage-light); }
 .profile-post-tile > div, .profile-listing-card > div { display: grid; gap: 6px; padding: 11px; }
 .profile-post-tile strong, .profile-listing-card strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }

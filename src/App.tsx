@@ -1133,7 +1133,17 @@ function ClosetView({
   );
 }
 
-function CommunityProfileSheet({ profileId, userId, currentMember, name, handle, image, bio, onClose }: { profileId: string; userId: string; currentMember: Pick<CommunityFriend, "name" | "handle" | "avatar">; name: string; handle: string; image: string; bio?: string; onClose: () => void }) {
+function CommunityProfileSheet({ profileId, userId, currentMember, name, handle, image, bio, onClose, onOpenPost }: {
+  profileId: string;
+  userId: string;
+  currentMember: Pick<CommunityFriend, "name" | "handle" | "avatar">;
+  name: string;
+  handle: string;
+  image: string;
+  bio?: string;
+  onClose: () => void;
+  onOpenPost?: (post: FashionPost) => void;
+}) {
   const { lang } = useLanguage();
   const isSelf = profileId === userId;
   const [posts, setPosts] = useState<FashionPost[]>([]);
@@ -1251,10 +1261,10 @@ function CommunityProfileSheet({ profileId, userId, currentMember, name, handle,
           <div className="section-heading"><div><span className="eyebrow">{lang === "th" ? "สไตล์จากชุมชน" : "Community style"}</span><h3>{lang === "th" ? "โพสต์" : "Posts"}</h3></div></div>
           {loading && <p className="feed-empty">{lang === "th" ? "กำลังโหลด..." : "Loading..."}</p>}
           {!loading && !posts.length && <p className="feed-empty">{lang === "th" ? "ยังไม่มีโพสต์สาธารณะ" : "No public posts yet."}</p>}
-          {!!posts.length && <div className="profile-grid">{posts.map((post) => <article className="profile-post-tile" key={post.id}>
+          {!!posts.length && <div className="profile-grid">{posts.map((post) => <button className="profile-post-tile" key={post.id} disabled={!onOpenPost} onClick={() => onOpenPost?.(post)} aria-label={lang === "th" ? `เปิดโพสต์ ${post.look}` : `Open ${post.look} community post`}>
             <img src={post.image} alt={post.look} />
             <div><strong>{post.look}</strong><span><Heart size={13} /> {post.likedBy?.length ?? post.likes} · <MessageCircle size={13} /> {post.comments?.length ?? 0}</span></div>
-          </article>)}</div>}
+          </button>)}</div>}
         </section>
         <section className="social-profile-section">
           <div className="section-heading"><div><span className="eyebrow">{lang === "th" ? "เสื้อผ้าหมุนเวียน" : "Pre-loved pieces"}</span><h3>{lang === "th" ? "กำลังขาย" : "Selling"}</h3></div></div>
@@ -1596,7 +1606,7 @@ function FeedView({ garments, profile, userId, bonusAvailable, onPosted }: { gar
       {composer && <PostComposer garments={garments} profile={profile} userId={userId} initial={composer === "new" ? undefined : composer} onClose={() => setComposer(null)} onSave={savePost} />}
       {selected && <PostDetailSheet post={selected} garments={garments} canEdit={selected.ownerId === userId} isLiked={selected.likedBy?.includes(userId) ?? false} onLike={() => void toggleLike(selected)} onShare={() => setSharingPost(selected)} onClose={() => setSelected(null)} onProfile={() => setViewedProfile(selected)} onEdit={() => setComposer(selected)} onComment={addComment} />}
       {sharingPost && <SendPostSheet post={sharingPost} userId={userId} senderName={profile.displayName} onClose={() => setSharingPost(null)} onSent={(friend) => { setShareNotice(lang === "th" ? `ส่งโพสต์ให้ ${friend.name} แล้ว` : `Post sent to ${friend.name}.`); setTimeout(() => setShareNotice(""), 3500); setSharingPost(null); }} />}
-      {viewedProfile && <CommunityProfileSheet profileId={viewedProfile.ownerId || ""} userId={userId} currentMember={{ name: profile.displayName, handle: profile.username, avatar: profile.avatar }} name={viewedProfile.name} handle={viewedProfile.handle} image={viewedProfile.avatar || ""} bio={viewedProfile.authorBio} onClose={() => setViewedProfile(null)} />}
+      {viewedProfile && <CommunityProfileSheet profileId={viewedProfile.ownerId || ""} userId={userId} currentMember={{ name: profile.displayName, handle: profile.username, avatar: profile.avatar }} name={viewedProfile.name} handle={viewedProfile.handle} image={viewedProfile.avatar || ""} bio={viewedProfile.authorBio} onClose={() => setViewedProfile(null)} onOpenPost={(post) => { setViewedProfile(null); setSelected({ ...post, garmentIds: post.garmentIds ?? [], likedBy: post.likedBy ?? [], likes: post.likedBy?.length ?? post.likes ?? 0, comments: post.comments ?? [] }); }} />}
     </div>
   );
 }
