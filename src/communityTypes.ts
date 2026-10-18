@@ -12,8 +12,12 @@ export type CommunityGarment = {
   type: string;
   color: string;
   material: string;
+  image?: string;
   style?: string;
   occasion?: string;
+  owner?: string;
+  components?: string;
+  notes?: string;
 };
 
 export type FashionPost = {
@@ -48,6 +52,8 @@ export type MarketplaceListing = {
   size: string;
   price: number;
   image: string;
+  images?: string[];
+  sourceGarmentId?: string;
   material: string;
   condition: string;
   description: string;

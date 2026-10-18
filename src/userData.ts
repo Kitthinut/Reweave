@@ -255,6 +255,30 @@ export function subscribeCommunityPosts(onPosts: (posts: FashionPost[]) => void,
   }, onError);
 }
 
+export async function updateCommunityPostAuthors(uid: string, name: string, handle: string, avatar: string, authorBio: string) {
+  const [publicPosts, privatePosts] = await Promise.all([
+    getDocs(query(communityPosts, where("privacy", "==", "public"))),
+    getDocs(privatePostsOf(uid)),
+  ]);
+  const postRefs = [
+    ...publicPosts.docs.filter((post) => post.data().ownerId === uid).map((post) => post.ref),
+    ...privatePosts.docs.map((post) => post.ref),
+  ];
+  const updatedAt = Date.now();
+  const failures: string[] = [];
+  for (const postRef of postRefs) {
+    try {
+      await updateDoc(postRef, { name, handle, avatar, authorBio, updatedAt });
+    } catch (error) {
+      console.error(`Could not sync author details to community post ${postRef.id}`, error);
+      failures.push(postRef.id);
+    }
+  }
+  if (failures.length) {
+    throw new Error(`Author details updated on ${postRefs.length - failures.length} of ${postRefs.length} posts. Failed post IDs: ${failures.join(", ")}`);
+  }
+}
+
 export async function saveCommunityPost(uid: string, post: FashionPost) {
   if (post.ownerId && post.ownerId !== uid) throw new Error("Cannot save a community post owned by another user.");
 
@@ -307,12 +331,32 @@ export function subscribeMarketplaceListings(onListings: (listings: MarketplaceL
 }
 
 export async function createMarketplaceListing(listing: MarketplaceListing) {
-  let image = listing.image;
-  if (image.startsWith("data:") && image.length > 350_000) {
-    image = await shrinkImage(image, 512);
-    if (image.length > 750_000) image = await shrinkImage(image, 320);
+  await setDoc(doc(marketplaceListings, listing.id), await prepareMarketplaceListing(listing));
+}
+
+export async function updateMarketplaceListing(listing: MarketplaceListing, sellerId: string) {
+  const listingRef = doc(marketplaceListings, listing.id);
+  const current = await getDoc(listingRef);
+  if (!current.exists()) throw new Error("This listing no longer exists.");
+  if (current.data().sellerId !== sellerId || listing.sellerId !== sellerId) {
+    throw new Error("Cannot edit another user's marketplace listing.");
   }
-  await setDoc(doc(marketplaceListings, listing.id), { ...listing, image });
+  if (current.data().sold) throw new Error("A sold listing cannot be edited.");
+  await updateDoc(listingRef, await prepareMarketplaceListing(listing));
+}
+
+async function prepareMarketplaceListing(listing: MarketplaceListing) {
+  const originalImages = listing.images?.length ? listing.images : [listing.image];
+  const images: string[] = [];
+  for (let image of originalImages) {
+    if (image.startsWith("data:") && image.length > 350_000) {
+      image = await shrinkImage(image, 512);
+      if (image.length > 750_000) image = await shrinkImage(image, 320);
+    }
+    images.push(image);
+  }
+  const [image, ...additionalImages] = images;
+  return { ...listing, image, images: [image, ...additionalImages] };
 }
 
 export async function deleteMarketplaceListing(listingId: string, sellerId: string) {
@@ -327,6 +371,8 @@ export async function deleteMarketplaceListing(listingId: string, sellerId: stri
 export async function completeMockPurchase(listing: MarketplaceListing, buyerId: string, buyerName: string, paymentMethod: DemoPaymentMethod) {
   const listingRef = doc(marketplaceListings, listing.id);
   const orderRef = doc(marketplaceOrders);
+  const purchasedGarmentRef = doc(garmentsOf(buyerId));
+  const purchasedAt = Date.now();
   await runTransaction(db, async (transaction) => {
     const current = await transaction.get(listingRef);
     if (!current.exists()) throw new Error("This listing is no longer available.");
@@ -334,7 +380,7 @@ export async function completeMockPurchase(listing: MarketplaceListing, buyerId:
     if (data.sold) throw new Error("This listing has already been sold.");
     if (data.sellerId === buyerId) throw new Error("You cannot buy your own listing.");
 
-    transaction.update(listingRef, { sold: true, soldAt: Date.now() });
+    transaction.update(listingRef, { sold: true, soldAt: purchasedAt });
     transaction.set(orderRef, {
       listingId: data.id,
       listingName: data.name,
@@ -345,7 +391,29 @@ export async function completeMockPurchase(listing: MarketplaceListing, buyerId:
       amount: data.price,
       paymentMethod,
       status: "mock-checkout-complete",
-      createdAt: Date.now(),
+      createdAt: purchasedAt,
+    });
+    transaction.set(purchasedGarmentRef, {
+      name: data.name,
+      type: data.type,
+      color: "Not specified",
+      material: data.material,
+      components: data.material,
+      style: data.style,
+      occasion: "Everyday",
+      owner: buyerName,
+      closet: "Everyday",
+      image: data.image,
+      notes: [
+        data.size ? `Size: ${data.size}` : "",
+        data.condition ? `Condition: ${data.condition}` : "",
+        data.description,
+        Array.isArray(data.tags) && data.tags.length ? `Tags: ${data.tags.join(", ")}` : "",
+        `Purchased for ฿${data.price}`,
+      ].filter(Boolean).join(" · "),
+      wearCount: 0,
+      createdAt: purchasedAt,
     });
   });
+  return purchasedGarmentRef.id;
 }

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthGate";
-import { acceptCommunityFriendRequest, addCommunityComment, createCommunityId, getCommunityRelationship, helpCommunityFriend, loadUser, markCommunityMessagesRead, saveUser, sendCommunityFriendRequest, sendCommunityMessage, setCommunityFollow, shrinkImage, loadGarments, saveGarment, removeGarment, setGarmentsCloset, saveCommunityPost, subscribeCommunityFriends, subscribeCommunityMessages, subscribeCommunityPosts, subscribeIncomingCommunityFriendRequests, toggleCommunityLike, subscribeMarketplaceListings, createMarketplaceListing, completeMockPurchase, deleteMarketplaceListing, type CommunityFriend, type CommunityFriendRequest, type CommunityMessage } from "./userData";
+import { acceptCommunityFriendRequest, addCommunityComment, createCommunityId, getCommunityRelationship, helpCommunityFriend, loadUser, markCommunityMessagesRead, saveUser, sendCommunityFriendRequest, sendCommunityMessage, setCommunityFollow, shrinkImage, loadGarments, saveGarment, removeGarment, setGarmentsCloset, saveCommunityPost, subscribeCommunityFriends, subscribeCommunityMessages, subscribeCommunityPosts, subscribeIncomingCommunityFriendRequests, toggleCommunityLike, subscribeMarketplaceListings, createMarketplaceListing, updateMarketplaceListing, completeMockPurchase, deleteMarketplaceListing, updateCommunityPostAuthors, type CommunityFriend, type CommunityFriendRequest, type CommunityMessage } from "./userData";
 import type { CommunityComment, CommunityGarment, DemoPaymentMethod, FashionPost, MarketplaceListing } from "./communityTypes";
 import HelpTour from "./Helptour";
 import { parseComposition, naturalFiberShare } from "./composition";
@@ -264,6 +264,7 @@ type Garment = {
   owner?: string;
   closet: string;
   image: string;
+  marketplaceListingId?: string;
   notes?: string;
   wearCount?: number;
 };
@@ -608,16 +609,17 @@ function GarmentPhotoPicker({ image, placeholder, onResult, onBusy, onNote, comp
   );
 }
 
-function GarmentCard({ garment, onClick, onDragStart, onDragEnd }: {
+function GarmentCard({ garment, listed, onClick, onDragStart, onDragEnd }: {
   garment: Garment;
+  listed: boolean;
   onClick: () => void;
-  onDragStart: (event: React.DragEvent<HTMLButtonElement>) => void;
+  onDragStart: (event: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd: () => void;
 }) {
   const { lang } = useLanguage();
   const displayName = garmentName(garment, lang);
   return (
-    <button className="garment-card" draggable onClick={onClick} onDragStart={onDragStart} onDragEnd={onDragEnd} aria-label={`Drag ${displayName} to move it, or click to view details`} title={`Drag to move ${displayName}; click for details`}>
+    <div className="garment-card" role="button" tabIndex={0} draggable onClick={onClick} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onClick(); } }} onDragStart={onDragStart} onDragEnd={onDragEnd} aria-label={`Drag ${displayName} to move it, or click to view details`} title={`Drag to move ${displayName}; click for details`}>
       <span className="hanger-hook" />
       <img src={garment.image} alt={displayName} style={{ objectFit: "contain", background: "var(--sage-light)" }} />
       <span className="garment-info">
@@ -627,7 +629,8 @@ function GarmentCard({ garment, onClick, onDragStart, onDragEnd }: {
           <small>{garment.material}</small>
         </span>
       </span>
-    </button>
+      <span className="garment-details-hint">{listed ? "In shop" : "Details"} <ArrowRight size={12} /></span>
+    </div>
   );
 }
 
@@ -637,12 +640,14 @@ function GarmentDetailSheet({
   onClose,
   onSave,
   onDelete,
+  onListForSale,
 }: {
   garment: Garment;
   closets: string[];
   onClose: () => void;
   onSave: (changes: Partial<Garment>) => Promise<void>;
   onDelete: () => Promise<void>;
+  onListForSale: () => void;
 }) {
   const { lang } = useLanguage();
   const [editing, setEditing] = useState(false);
@@ -698,7 +703,13 @@ function GarmentDetailSheet({
             {editing ? (
               <button className="primary-button" onClick={async () => { await onSave(draft); setEditing(false); }}><Check size={17} /> Save changes</button>
             ) : (
-              <button className="primary-button" onClick={() => setEditing(true)}><Pencil size={17} /> Edit piece</button>
+              <>
+                <button className="secondary-button" disabled={Boolean(garment.marketplaceListingId)} onClick={onListForSale}>
+                  {garment.marketplaceListingId ? <Check size={17} /> : <Store size={17} />}
+                  {garment.marketplaceListingId ? "In shop" : "Sell in shop"}
+                </button>
+                <button className="primary-button" onClick={() => setEditing(true)}><Pencil size={17} /> Edit piece</button>
+              </>
             )}
           </div>
         </div>
@@ -886,24 +897,33 @@ function NewClosetSheet({ onClose, onCreate }: { onClose: () => void; onCreate: 
 function WardrobeView({
   garments,
   closets,
+  userId,
+  profile,
   onAdd,
   onUpdate,
   onDelete,
   onAddCloset,
   onDeleteCloset,
+  onCreateListing,
+  onUpdateListing,
 }: {
   garments: Garment[];
   closets: string[];
+  userId: string;
+  profile: Profile;
   onAdd: () => void;
   onUpdate: (id: Garment["id"], changes: Partial<Garment>) => Promise<void>;
   onDelete: (id: Garment["id"]) => Promise<void>;
   onAddCloset: (name: string) => string | null;
   onDeleteCloset: (name: string) => void;
+  onCreateListing: (listing: MarketplaceListing) => Promise<void>;
+  onUpdateListing: (listing: MarketplaceListing) => Promise<void>;
 }) {
   const { lang, t } = useLanguage();
   const [naming, setNaming] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Garment | null>(null);
+  const [listingGarment, setListingGarment] = useState<Garment | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState({ type: "", closet: "", color: "" });
   const [draggedGarmentId, setDraggedGarmentId] = useState("");
@@ -981,6 +1001,7 @@ function WardrobeView({
             >
               {closetItems.length ? closetItems.map((garment) => <GarmentCard
                 garment={garment}
+                listed={Boolean(garment.marketplaceListingId)}
                 key={garment.id}
                 onClick={() => {
                   if (didDrag.current) return;
@@ -1018,9 +1039,25 @@ function WardrobeView({
             await onDelete(selected.id);
             setSelected(null);
           }}
+          onListForSale={() => {
+            if (!selected.marketplaceListingId) setListingGarment(selected);
+            setSelected(null);
+          }}
         />
       )}
       {filterOpen && <ClosetFilterSheet types={[...new Set(garments.map((garment) => garment.type))]} colors={[...new Set(garments.map((garment) => garment.color).filter(Boolean))].sort()} closets={closets} onClose={() => setFilterOpen(false)} onApply={setFilters} />}
+      {listingGarment && <ListingComposer
+        userId={userId}
+        profile={profile}
+        garment={listingGarment}
+        onClose={() => setListingGarment(null)}
+        onSave={async (listing) => {
+          await onCreateListing({ ...listing, sourceGarmentId: String(listingGarment.id) });
+          await onUpdate(listingGarment.id, { marketplaceListingId: listing.id });
+          setListingGarment(null);
+        }}
+        onUpdate={onUpdateListing}
+      />}
     </>
   );
 }
@@ -1112,6 +1149,8 @@ function MatchView({ garments, userId, currentMember, onPurchase, onDelete }: {
 function ClosetView({
   state,
   userId,
+  onCreateListing,
+  onUpdateListing,
   onCreate,
   onUpdate,
   onDelete,
@@ -1122,6 +1161,8 @@ function ClosetView({
 }: {
   state: DemoState;
   userId: string;
+  onCreateListing: (listing: MarketplaceListing) => Promise<void>;
+  onUpdateListing: (listing: MarketplaceListing) => Promise<void>;
   onCreate: (garment: Garment) => Promise<void>;
   onUpdate: (id: Garment["id"], changes: Partial<Garment>) => Promise<void>;
   onDelete: (id: Garment["id"]) => Promise<void>;
@@ -1146,7 +1187,7 @@ function ClosetView({
         <button data-tour="match-tab" className={tab === "match" ? "active" : ""} onClick={() => setTab("match")}><Sparkles size={17} /> {t.match}</button>
       </div>
       {tab === "wardrobe" ? (
-        <WardrobeView garments={state.garments} closets={state.closets} onAdd={() => setAdding(true)} onUpdate={onUpdate} onDelete={onDelete} onAddCloset={onAddCloset} onDeleteCloset={onDeleteCloset} />
+        <WardrobeView garments={state.garments} closets={state.closets} userId={userId} profile={state.profile} onAdd={() => setAdding(true)} onUpdate={onUpdate} onDelete={onDelete} onAddCloset={onAddCloset} onDeleteCloset={onDeleteCloset} onCreateListing={onCreateListing} onUpdateListing={onUpdateListing} />
       ) : (
         <MatchView garments={state.garments} userId={userId} currentMember={{ name: state.profile.displayName, handle: state.profile.username, avatar: state.profile.avatar }} onPurchase={onPurchase} onDelete={onDeleteListing} />
       )}
@@ -1158,7 +1199,7 @@ function ClosetView({
 function CommunityProfileSheet({ profileId, userId, currentMember, name, handle, image, bio, onClose, onOpenPost }: {
   profileId: string;
   userId: string;
-  currentMember: Pick<CommunityFriend, "name" | "handle" | "avatar">;
+  currentMember: Pick<CommunityFriend, "name" | "handle" | "avatar"> & { bio?: string };
   name: string;
   handle: string;
   image: string;
@@ -1168,6 +1209,10 @@ function CommunityProfileSheet({ profileId, userId, currentMember, name, handle,
 }) {
   const { lang } = useLanguage();
   const isSelf = profileId === userId;
+  const profileName = isSelf ? currentMember.name : name;
+  const profileHandle = isSelf ? currentMember.handle : handle;
+  const profileImage = isSelf ? currentMember.avatar || "" : image;
+  const profileBio = isSelf ? currentMember.bio : bio;
   const [posts, setPosts] = useState<FashionPost[]>([]);
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [following, setFollowing] = useState(false);
@@ -1259,10 +1304,10 @@ function CommunityProfileSheet({ profileId, userId, currentMember, name, handle,
     <div className="overlay social-profile-overlay" onClick={onClose}>
       <article className="sheet social-profile-sheet" onClick={(event) => event.stopPropagation()}>
         <button className="close-button" onClick={onClose}><X size={20} /></button>
-        <div className="social-profile-cover">{image && <img src={image} alt="" />}</div>
+        <div className="social-profile-cover" aria-hidden="true" />
         <div className="social-profile-head">
-          <span className="large-avatar">{image ? <img src={image} alt="" /> : name.slice(0, 1)}</span>
-          <div className="social-profile-name"><h2>{name}</h2><p>{handle}</p></div>
+          <span className="large-avatar">{profileImage ? <img src={profileImage} alt="" /> : profileName.slice(0, 1)}</span>
+          <div className="social-profile-name"><h2>{profileName}</h2><p>{profileHandle}</p></div>
           {!isSelf && <div className="social-profile-actions">
             <button className={following ? "secondary-button" : "primary-button"} disabled={busy || relationshipLoading} onClick={() => void toggleFollow()}>
               {following ? <Check size={16} /> : <Users size={16} />}{following ? (lang === "th" ? "กำลังติดตาม" : "Following") : (lang === "th" ? "ติดตาม" : "Follow")}
@@ -1273,7 +1318,7 @@ function CommunityProfileSheet({ profileId, userId, currentMember, name, handle,
             </button>
           </div>}
         </div>
-        {bio && <p className="profile-bio">{bio}</p>}
+        {profileBio && <p className="profile-bio">{profileBio}</p>}
         <div className="social-stats">
           <span><strong>{posts.length}</strong>{lang === "th" ? "โพสต์สาธารณะ" : "public posts"}</span>
           <span><strong>{listings.length}</strong>{lang === "th" ? "รายการขาย" : "items for sale"}</span>
@@ -1333,7 +1378,9 @@ function PostComposer({
     try {
       const taggedPieces: CommunityGarment[] = garments
         .filter((garment) => tagged.includes(String(garment.id)))
-        .map(({ id, name, type, color, material, style, occasion }) => ({ id: String(id), name, type, color, material, style, occasion }));
+        .map(({ id, name, type, color, material, image, style, occasion, owner, components, notes }) => ({
+          id: String(id), name, type, color, material, image, style, occasion, owner, components, notes,
+        }));
       await onSave({ ...draft, ownerId: userId, name: profile.displayName, handle: profile.username, avatar: profile.avatar, authorBio: profile.bio, garmentIds: tagged, taggedPieces, tags: styleTags.join(" · ") });
       onClose();
     } catch (error) {
@@ -1422,45 +1469,79 @@ function PostDetailSheet({
   const [commentError, setCommentError] = useState("");
   const [likeError, setLikeError] = useState("");
   const [liking, setLiking] = useState(false);
+  const [selectedTaggedGarment, setSelectedTaggedGarment] = useState<CommunityGarment | null>(null);
   const comments = post.comments ?? [];
   const likes = post.likedBy?.length ?? post.likes ?? 0;
-  const taggedGarments: CommunityGarment[] = post.taggedPieces ?? (canEdit ? garments
+  const currentTaggedGarments = canEdit ? garments
     .filter((garment) => post.garmentIds.includes(String(garment.id)))
-    .map(({ id, name, type, color, material, style, occasion }) => ({ id: String(id), name, type, color, material, style, occasion })) : []);
+    .map(({ id, name, type, color, material, image, style, occasion, owner, components, notes }) => ({
+      id: String(id), name, type, color, material, image, style, occasion, owner, components, notes,
+    })) : [];
+  const taggedGarments: CommunityGarment[] = (post.taggedPieces ?? currentTaggedGarments).map((piece) => {
+    const currentPiece = currentTaggedGarments.find((garment) => garment.id === piece.id);
+    return { ...piece, image: piece.image || currentPiece?.image };
+  });
   return (
-    <div className="overlay" onClick={onClose}>
-      <article className="sheet post-detail-sheet" onClick={(event) => event.stopPropagation()}>
-        <img src={post.image} alt={post.look} />
-        <div className="post-detail-side">
-          <div className="post-detail-user"><button onClick={onProfile} className="post-avatar">{post.avatar ? <img src={post.avatar} alt="" /> : post.name.slice(0, 1)}</button><button onClick={onProfile}><strong>{post.name}</strong><small>{post.handle}</small></button>{canEdit && <button className="icon-button" onClick={onEdit}><Pencil size={17} /></button>}<button className="close-button" onClick={onClose}><X size={19} /></button></div>
-          <div className="post-copy"><h2>{post.look}</h2><p>{post.caption}</p><span>{[post.style, post.tags].filter(Boolean).join(" · ")}</span></div>
-          <div className="post-tagged-pieces">
-            <strong><Tag size={14} /> {lang === "th" ? "เสื้อผ้าในลุคนี้" : "Pieces in this look"}</strong>
-            <div>{taggedGarments.length ? taggedGarments.map((garment) => <span key={garment.id}><small>{garmentName(garment, lang)}</small>{[garment.type, garment.color, garment.material, garment.style].filter(Boolean).join(" · ") && <small>{[garment.type, garment.color, garment.material, garment.style].filter(Boolean).join(" · ")}</small>}</span>) : <p>{lang === "th" ? "ไม่ได้แท็กเสื้อผ้า" : "No clothing tagged."}</p>}</div>
+    <>
+      <div className="overlay" onClick={onClose}>
+        <article className="sheet post-detail-sheet" onClick={(event) => event.stopPropagation()}>
+          <img src={post.image} alt={post.look} />
+          <div className="post-detail-side">
+            <div className="post-detail-user"><button onClick={onProfile} className="post-avatar">{post.avatar ? <img src={post.avatar} alt="" /> : post.name.slice(0, 1)}</button><button onClick={onProfile}><strong>{post.name}</strong><small>{post.handle}</small></button>{canEdit && <button className="icon-button" onClick={onEdit}><Pencil size={17} /></button>}<button className="close-button" onClick={onClose}><X size={19} /></button></div>
+            <div className="post-copy"><h2>{post.look}</h2><p>{post.caption}</p><span>{[post.style, post.tags].filter(Boolean).join(" · ")}</span></div>
+            <div className="post-tagged-pieces">
+              <strong><Tag size={14} /> {lang === "th" ? "เสื้อผ้าในลุคนี้" : "Pieces in this look"}</strong>
+              <div>{taggedGarments.length ? taggedGarments.map((garment) => <button type="button" key={garment.id} onClick={() => setSelectedTaggedGarment(garment)}>
+                {garment.image ? <img src={garment.image} alt={garmentName(garment, lang)} /> : <span className="tagged-piece-no-image"><Shirt size={20} /></span>}
+                <small>{garmentName(garment, lang)}</small>
+                <small>{[garment.type, garment.color, garment.material, garment.style].filter(Boolean).join(" · ")}</small>
+              </button>) : <p>{lang === "th" ? "ไม่ได้แท็กเสื้อผ้า" : "No clothing tagged."}</p>}</div>
+            </div>
+            <section className="comments" aria-label={lang === "th" ? "ความคิดเห็น" : "Comments"}>
+              <strong className="comments-heading">{comments.length} {lang === "th" ? "ความคิดเห็น" : "Comments"}</strong>
+              {comments.length
+                ? comments.map((item) => <p key={item.id}><strong>{item.name}</strong> {item.text}</p>)
+                : <p className="comments-empty">{lang === "th" ? "ยังไม่มีความคิดเห็น เริ่มบทสนทนาได้เลย" : "No comments yet. Start the conversation."}</p>}
+            </section>
+            <div className="post-detail-actions">
+              <button className={`post-like-action ${isLiked ? "liked" : ""}`} aria-label={isLiked ? "Remove like" : "Like post"} disabled={liking} onClick={async () => {
+                setLiking(true);
+                setLikeError("");
+                try {
+                  if (!await onLike()) setLikeError(lang === "th" ? "กดถูกใจไม่สำเร็จ โปรดลองอีกครั้ง" : "Could not update like. Check your connection and Firestore rules.");
+                } finally {
+                  setLiking(false);
+                }
+              }}><Heart size={19} fill={isLiked ? "currentColor" : "none"} /><span>{isLiked ? (lang === "th" ? "ถูกใจแล้ว" : "Liked") : (lang === "th" ? "ถูกใจ" : "Like")} · {likes}</span></button>
+              <span className="post-comment-count"><MessageCircle size={19} /><span>{comments.length} {lang === "th" ? "ความคิดเห็น" : "comments"}</span></span>
+              <button className="send-post-action" aria-label={lang === "th" ? "ส่งโพสต์ให้เพื่อน" : "Send post to a friend"} onClick={onShare}><Send size={16} /><span>{lang === "th" ? "ส่งโพสต์" : "Send post"}</span></button>
+            </div>
+            <div className="comment-box"><input id="post-comment-input" value={comment} onChange={(event) => setComment(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && comment.trim()) event.currentTarget.nextElementSibling instanceof HTMLButtonElement && event.currentTarget.nextElementSibling.click(); }} placeholder={lang === "th" ? "เพิ่มความคิดเห็น..." : "Add a comment..."} /><button disabled={!comment.trim()} onClick={async () => { const text = comment.trim(); if (!text) return; try { await onComment(text); setComment(""); setCommentError(""); } catch { setCommentError(lang === "th" ? "ส่งความคิดเห็นไม่สำเร็จ" : "Could not post comment. Check your connection and Firestore rules."); } }}>{lang === "th" ? "โพสต์" : "Post"}</button>{(likeError || commentError) && <small role="alert">{likeError || commentError}</small>}</div>
           </div>
-          <section className="comments" aria-label={lang === "th" ? "ความคิดเห็น" : "Comments"}>
-            <strong className="comments-heading">{comments.length} {lang === "th" ? "ความคิดเห็น" : "Comments"}</strong>
-            {comments.length
-              ? comments.map((item) => <p key={item.id}><strong>{item.name}</strong> {item.text}</p>)
-              : <p className="comments-empty">{lang === "th" ? "ยังไม่มีความคิดเห็น เริ่มบทสนทนาได้เลย" : "No comments yet. Start the conversation."}</p>}
-          </section>
-          <div className="post-detail-actions">
-            <button className={`post-like-action ${isLiked ? "liked" : ""}`} aria-label={isLiked ? "Remove like" : "Like post"} disabled={liking} onClick={async () => {
-              setLiking(true);
-              setLikeError("");
-              try {
-                if (!await onLike()) setLikeError(lang === "th" ? "กดถูกใจไม่สำเร็จ โปรดลองอีกครั้ง" : "Could not update like. Check your connection and Firestore rules.");
-              } finally {
-                setLiking(false);
-              }
-            }}><Heart size={19} fill={isLiked ? "currentColor" : "none"} /><span>{isLiked ? (lang === "th" ? "ถูกใจแล้ว" : "Liked") : (lang === "th" ? "ถูกใจ" : "Like")} · {likes}</span></button>
-            <span className="post-comment-count"><MessageCircle size={19} /><span>{comments.length} {lang === "th" ? "ความคิดเห็น" : "comments"}</span></span>
-            <button className="send-post-action" aria-label={lang === "th" ? "ส่งโพสต์ให้เพื่อน" : "Send post to a friend"} onClick={onShare}><Send size={16} /><span>{lang === "th" ? "ส่งโพสต์" : "Send post"}</span></button>
+        </article>
+      </div>
+      {selectedTaggedGarment && <div className="overlay tagged-piece-detail-overlay" onClick={() => setSelectedTaggedGarment(null)}>
+        <article className="sheet tagged-piece-detail" onClick={(event) => event.stopPropagation()}>
+          <button className="close-button" onClick={() => setSelectedTaggedGarment(null)} aria-label={lang === "th" ? "ปิดรายละเอียด" : "Close details"}><X size={20} /></button>
+          {selectedTaggedGarment.image
+            ? <img className="tagged-piece-detail-image" src={selectedTaggedGarment.image} alt={garmentName(selectedTaggedGarment, lang)} />
+            : <div className="tagged-piece-detail-placeholder"><Shirt size={38} /></div>}
+          <div className="tagged-piece-detail-copy">
+            <span className="eyebrow">{lang === "th" ? "รายละเอียดเสื้อผ้าที่แท็ก" : "Tagged clothing details"}</span>
+            <h2>{garmentName(selectedTaggedGarment, lang)}</h2>
+            {[
+              [lang === "th" ? "ประเภท" : "Type", selectedTaggedGarment.type],
+              [lang === "th" ? "สี" : "Color", selectedTaggedGarment.color],
+              [lang === "th" ? "วัสดุ" : "Material", selectedTaggedGarment.components || selectedTaggedGarment.material],
+              [lang === "th" ? "สไตล์" : "Style", selectedTaggedGarment.style],
+              [lang === "th" ? "โอกาส" : "Occasion", selectedTaggedGarment.occasion],
+              [lang === "th" ? "เจ้าของ" : "Owner", selectedTaggedGarment.owner],
+            ].filter(([, value]) => value).map(([label, value]) => <p key={label}><strong>{label}</strong><span>{value}</span></p>)}
+            {selectedTaggedGarment.notes && <p className="tagged-piece-notes"><strong>{lang === "th" ? "รายละเอียดเพิ่มเติม" : "More details"}</strong><span>{selectedTaggedGarment.notes}</span></p>}
           </div>
-          <div className="comment-box"><input id="post-comment-input" value={comment} onChange={(event) => setComment(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && comment.trim()) event.currentTarget.nextElementSibling instanceof HTMLButtonElement && event.currentTarget.nextElementSibling.click(); }} placeholder={lang === "th" ? "เพิ่มความคิดเห็น..." : "Add a comment..."} /><button disabled={!comment.trim()} onClick={async () => { const text = comment.trim(); if (!text) return; try { await onComment(text); setComment(""); setCommentError(""); } catch { setCommentError(lang === "th" ? "ส่งความคิดเห็นไม่สำเร็จ" : "Could not post comment. Check your connection and Firestore rules."); } }}>{lang === "th" ? "โพสต์" : "Post"}</button>{(likeError || commentError) && <small role="alert">{likeError || commentError}</small>}</div>
-        </div>
-      </article>
-    </div>
+        </article>
+      </div>}
+    </>
   );
 }
 
@@ -1608,8 +1689,15 @@ function FeedView({ garments, profile, userId, bonusAvailable, onPosted, openNot
       return false;
     }
   };
+  const postsWithCurrentAuthor = feedPosts.map((post) => post.ownerId === userId ? {
+    ...post,
+    name: profile.displayName,
+    handle: profile.username,
+    avatar: profile.avatar,
+    authorBio: profile.bio,
+  } : post);
   const searchTerms = query.trim().toLocaleLowerCase().split(/\s+/).map((term) => term.replace(/^#/, "")).filter(Boolean);
-  const visiblePosts = feedPosts.filter((post) => {
+  const visiblePosts = postsWithCurrentAuthor.filter((post) => {
     if (post.privacy !== "public") return false;
     if (!searchTerms.length) return true;
     const taggedDetails = post.ownerId === userId ? garments
@@ -1664,34 +1752,45 @@ function FeedView({ garments, profile, userId, bonusAvailable, onPosted, openNot
       {composer && <PostComposer garments={garments} profile={profile} userId={userId} initial={composer === "new" ? undefined : composer} onClose={() => setComposer(null)} onSave={savePost} />}
       {selected && <PostDetailSheet post={selected} garments={garments} canEdit={selected.ownerId === userId} isLiked={selected.likedBy?.includes(userId) ?? false} onLike={() => toggleLike(selected)} onShare={() => setSharingPost(selected)} onClose={() => setSelected(null)} onProfile={() => setViewedProfile(selected)} onEdit={() => setComposer(selected)} onComment={addComment} />}
       {sharingPost && <SendPostSheet post={sharingPost} userId={userId} senderName={profile.displayName} onClose={() => setSharingPost(null)} onSent={(friend) => { setShareNotice(lang === "th" ? `ส่งโพสต์ให้ ${friend.name} แล้ว` : `Post sent to ${friend.name}.`); setTimeout(() => setShareNotice(""), 3500); setSharingPost(null); }} />}
-      {viewedProfile && <CommunityProfileSheet profileId={viewedProfile.ownerId || ""} userId={userId} currentMember={{ name: profile.displayName, handle: profile.username, avatar: profile.avatar }} name={viewedProfile.name} handle={viewedProfile.handle} image={viewedProfile.avatar || ""} bio={viewedProfile.authorBio} onClose={() => setViewedProfile(null)} onOpenPost={(post) => { setViewedProfile(null); setSelected({ ...post, garmentIds: post.garmentIds ?? [], likedBy: post.likedBy ?? [], likes: post.likedBy?.length ?? post.likes ?? 0, comments: post.comments ?? [] }); }} />}
+      {viewedProfile && <CommunityProfileSheet profileId={viewedProfile.ownerId || ""} userId={userId} currentMember={{ name: profile.displayName, handle: profile.username, avatar: profile.avatar, bio: profile.bio }} name={viewedProfile.name} handle={viewedProfile.handle} image={viewedProfile.avatar || ""} bio={viewedProfile.authorBio} onClose={() => setViewedProfile(null)} onOpenPost={(post) => { setViewedProfile(null); setSelected({ ...post, garmentIds: post.garmentIds ?? [], likedBy: post.likedBy ?? [], likes: post.likedBy?.length ?? post.likes ?? 0, comments: post.comments ?? [] }); }} />}
     </div>
   );
 }
 
-function ListingComposer({ userId, profile, onClose, onSave }: { userId: string; profile: Profile; onClose: () => void; onSave: (listing: MarketplaceListing) => Promise<void> }) {
+function ListingComposer({ userId, profile, onClose, onSave, onUpdate, initial, garment }: {
+  userId: string;
+  profile: Profile;
+  onClose: () => void;
+  onSave: (listing: MarketplaceListing) => Promise<void>;
+  onUpdate: (listing: MarketplaceListing) => Promise<void>;
+  initial?: MarketplaceListing;
+  garment?: Garment;
+}) {
   const { lang } = useLanguage();
-  const [name, setName] = useState("");
-  const [type, setType] = useState("");
-  const [size, setSize] = useState("");
-  const [price, setPrice] = useState("");
-  const [material, setMaterial] = useState("");
-  const [condition, setCondition] = useState("");
-  const [description, setDescription] = useState("");
-  const [style, setStyle] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [image, setImage] = useState("");
+  const [name, setName] = useState(initial?.name ?? garment?.name ?? "");
+  const [type, setType] = useState(initial?.type ?? garment?.type ?? "");
+  const [size, setSize] = useState(initial?.size ?? "");
+  const [price, setPrice] = useState(initial ? String(initial.price) : "");
+  const [material, setMaterial] = useState(initial?.material ?? garment?.material ?? "");
+  const [condition, setCondition] = useState(initial?.condition ?? "");
+  const [description, setDescription] = useState(initial?.description ?? garment?.notes ?? "");
+  const [style, setStyle] = useState(initial?.style ?? (FASHION_STYLES.includes(garment?.style || "") ? garment?.style || "" : ""));
+  const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
+  const [images, setImages] = useState<string[]>(initial?.images?.length ? initial.images : initial?.image ? [initial.image] : garment?.image ? [garment.image] : []);
+  const mainImage = images[0] || "";
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const submit = async () => {
     const amount = Number(price);
-    if (!image || !name.trim() || !type || !size || !style || !condition || !Number.isFinite(amount) || amount <= 0) return;
+    if (!mainImage || !name.trim() || !type || !size || !style || !condition || !Number.isFinite(amount) || amount <= 0) return;
     setSaving(true);
     setError("");
     try {
-      await onSave({
-        id: createCommunityId(),
+      const listing: MarketplaceListing = {
+        ...(initial ?? {}),
+        id: initial?.id ?? createCommunityId(),
         sellerId: userId,
+        ...(initial?.sourceGarmentId || garment ? { sourceGarmentId: initial?.sourceGarmentId ?? String(garment?.id) } : {}),
         seller: profile.displayName,
         sellerHandle: profile.username,
         sellerAvatar: profile.avatar,
@@ -1699,15 +1798,18 @@ function ListingComposer({ userId, profile, onClose, onSave }: { userId: string;
         type,
         size,
         price: amount,
-        image,
+        image: mainImage,
+        images,
         material: material.trim(),
         condition,
         description: description.trim(),
         style,
         tags,
-        createdAt: Date.now(),
+        createdAt: initial?.createdAt ?? Date.now(),
         sold: false,
-      });
+      };
+      if (initial) await onUpdate(listing);
+      else await onSave(listing);
       onClose();
     } catch (saveError) {
       console.error("Could not create marketplace listing", saveError);
@@ -1723,20 +1825,34 @@ function ListingComposer({ userId, profile, onClose, onSave }: { userId: string;
   return (
     <div className="overlay" onClick={onClose}>
       <article className="sheet listing-composer" onClick={(event) => event.stopPropagation()}>
-        <div className="sheet-header"><div><span className="eyebrow">{lang === "th" ? "ขายให้สมาชิกในชุมชน" : "Sell to the community"}</span><h2>{lang === "th" ? "ลงขายเสื้อผ้า" : "List a clothing item"}</h2></div><button className="close-button" onClick={onClose}><X size={20} /></button></div>
+        <div className="sheet-header"><div><span className="eyebrow">{lang === "th" ? "ขายให้สมาชิกในชุมชน" : "Sell to the community"}</span><h2>{initial ? (lang === "th" ? "แก้ไขรายการขาย" : "Edit listing") : (lang === "th" ? "ลงขายเสื้อผ้า" : "List a clothing item")}</h2></div><button className="close-button" onClick={onClose}><X size={20} /></button></div>
         <label className="listing-upload">
-          <input type="file" accept="image/*" onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = () => setImage(String(reader.result));
-            reader.readAsDataURL(file);
+          <input type="file" accept="image/*" multiple onChange={(event) => {
+            const files = Array.from(event.target.files ?? []).slice(0, Math.max(0, 5 - images.length));
+            if (!files.length) return;
+            void Promise.all(files.map((file) => new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Could not read image."));
+              reader.onerror = () => reject(reader.error ?? new Error("Could not read image."));
+              reader.readAsDataURL(file);
+            }))).then((loadedImages) => {
+              setImages((current) => [...current, ...loadedImages].slice(0, 5));
+              setError("");
+            }).catch((readError) => {
+              console.error("Could not read listing photos", readError);
+              setError(lang === "th" ? "อ่านรูปภาพไม่สำเร็จ โปรดลองอีกครั้ง" : "Could not read one or more photos. Please try again.");
+            });
+            event.target.value = "";
           }} />
-          {image ? <img src={image} alt="Listing preview" /> : <span><Upload size={22} /> {lang === "th" ? "อัปโหลดรูปเสื้อผ้า" : "Upload clothing photos"}</span>}
+          {mainImage ? <img src={mainImage} alt="Listing preview" /> : <span><Upload size={22} /> {lang === "th" ? "อัปโหลดรูปเสื้อผ้า" : "Upload clothing photos"}</span>}
         </label>
+        <div className="listing-photo-row">
+          {images.map((photo, index) => <div className="listing-photo-thumb" key={`${index}-${photo.slice(-16)}`}><img src={photo} alt={`Listing photo ${index + 1}`} /><button type="button" aria-label={`Remove photo ${index + 1}`} onClick={() => setImages((current) => current.filter((_, photoIndex) => photoIndex !== index))}><X size={14} /></button></div>)}
+          {images.length < 5 && <span>{lang === "th" ? `เพิ่มรูปได้อีก ${5 - images.length} รูป` : `Add up to ${5 - images.length} more photo${5 - images.length === 1 ? "" : "s"}`}</span>}
+        </div>
         <div className="listing-form">
           <label><span>{lang === "th" ? "ชื่อเสื้อผ้า" : "Item name"}</span><input value={name} onChange={(event) => setName(event.target.value)} /></label>
-          <label><span>{lang === "th" ? "ประเภท" : "Type"}</span><select value={type} onChange={(event) => setType(event.target.value)}><option value="">{lang === "th" ? "เลือกประเภท" : "Choose type"}</option>{CLOTHING_TYPES.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label><span>{lang === "th" ? "ประเภท" : "Type"}</span><select value={type} onChange={(event) => setType(event.target.value)}><option value="">{lang === "th" ? "เลือกประเภท" : "Choose type"}</option>{type && !CLOTHING_TYPES.includes(type) && <option>{type}</option>}{CLOTHING_TYPES.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label><span>{lang === "th" ? "ขนาด" : "Size"}</span><select value={size} onChange={(event) => setSize(event.target.value)}><option value="">{lang === "th" ? "เลือกขนาด" : "Choose size"}</option>{SIZES.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label><span>{lang === "th" ? "ราคา (บาท)" : "Price (THB)"}</span><input type="number" min="1" step="1" value={price} onChange={(event) => setPrice(event.target.value)} /></label>
           <label><span>{lang === "th" ? "วัสดุ" : "Material"}</span><input value={material} onChange={(event) => setMaterial(event.target.value)} /></label>
@@ -1746,7 +1862,7 @@ function ListingComposer({ userId, profile, onClose, onSave }: { userId: string;
         </div>
         <TagDropdown label={lang === "th" ? "แท็กแฟชั่น" : "Fashion tags"} emptyLabel={lang === "th" ? "เลือกแท็ก" : "Choose tags"} options={FASHION_TAGS} selected={tags} onChange={setTags} />
         {error && <p className="post-save-error" role="alert">{error}</p>}
-        <button className="primary-button full" disabled={saving || !image || !name.trim() || !type || !size || !style || !condition || !Number.isFinite(Number(price)) || Number(price) <= 0} onClick={() => void submit()}>{saving ? (lang === "th" ? "กำลังลงขาย..." : "Listing...") : (lang === "th" ? "ลงขายให้สมาชิก" : "List for sale")}</button>
+        <button className="primary-button full" disabled={saving || !mainImage || !name.trim() || !type || !size || !style || !condition || !Number.isFinite(Number(price)) || Number(price) <= 0} onClick={() => void submit()}>{saving ? (lang === "th" ? "กำลังบันทึก..." : "Saving...") : initial ? (lang === "th" ? "บันทึกการแก้ไข" : "Save changes") : (lang === "th" ? "ลงขายให้สมาชิก" : "List for sale")}</button>
       </article>
     </div>
   );
@@ -1767,13 +1883,14 @@ function DemoQrCode() {
   return <svg className="demo-qr" viewBox="0 0 21 21" role="img" aria-label="Mock QR code preview">{cells.map((dark, index) => dark && <rect key={index} x={index % 21} y={Math.floor(index / 21)} width="1" height="1" />)}</svg>;
 }
 
-function ListingDetailSheet({ listing, userId, currentMember, onClose, onPurchase, onDelete }: {
+function ListingDetailSheet({ listing, userId, currentMember, onClose, onPurchase, onDelete, onEdit }: {
   listing: MarketplaceListing;
   userId: string;
   currentMember: Pick<CommunityFriend, "name" | "handle" | "avatar">;
   onClose: () => void;
   onPurchase: (listing: MarketplaceListing, method: DemoPaymentMethod) => Promise<void>;
   onDelete: (listing: MarketplaceListing) => Promise<void>;
+  onEdit?: (listing: MarketplaceListing) => void;
 }) {
   const { lang } = useLanguage();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -1781,6 +1898,8 @@ function ListingDetailSheet({ listing, userId, currentMember, onClose, onPurchas
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [sellerOpen, setSellerOpen] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const photos = listing.images?.length ? listing.images : [listing.image];
   const isSeller = listing.sellerId === userId;
   const checkout = async () => {
     setBusy(true);
@@ -1805,8 +1924,9 @@ function ListingDetailSheet({ listing, userId, currentMember, onClose, onPurchas
       <div className="overlay" onClick={onClose}>
         <article className="sheet listing-detail-sheet" onClick={(event) => event.stopPropagation()}>
           <button className="close-button" onClick={onClose} aria-label="Close"><X size={20} /></button>
-          <img src={listing.image} alt={listing.name} />
+          <img src={photos[Math.min(photoIndex, photos.length - 1)] || listing.image} alt={listing.name} />
           <div className="listing-detail-content">
+            {photos.length > 1 && <div className="listing-detail-photos">{photos.map((photo, index) => <button type="button" key={`${index}-${photo.slice(-16)}`} className={index === photoIndex ? "active" : ""} onClick={() => setPhotoIndex(index)} aria-label={`View photo ${index + 1}`}><img src={photo} alt="" /></button>)}</div>}
             <span className="eyebrow">{listing.condition} · {listing.type} · {listing.size}</span>
             <h2>{listing.name}</h2>
             <p>{listing.description || (lang === "th" ? "ผู้ขายยังไม่ได้เพิ่มรายละเอียด" : "No description provided.")}</p>
@@ -1816,7 +1936,10 @@ function ListingDetailSheet({ listing, userId, currentMember, onClose, onPurchas
             <div className="purchase-row">
               <div><small>{lang === "th" ? "ราคามือสอง" : "Secondhand price"}</small><strong>฿{listing.price.toLocaleString()}</strong></div>
               {isSeller
-                ? <button className="danger-button" disabled={busy} onClick={async () => { setBusy(true); try { await onDelete(listing); onClose(); } catch (deleteError) { console.error("Could not remove marketplace listing", deleteError); setError(lang === "th" ? "ลบรายการไม่สำเร็จ โปรดลองอีกครั้ง" : "Could not remove this listing. Please try again."); } finally { setBusy(false); } }}><Trash2 size={17} /> {lang === "th" ? "ลบรายการ" : "Remove listing"}</button>
+                ? <span className="seller-listing-actions">
+                    {onEdit && <button className="secondary-button" disabled={busy} onClick={() => onEdit(listing)}><Pencil size={16} /> {lang === "th" ? "แก้ไข" : "Edit listing"}</button>}
+                    <button className="danger-button" disabled={busy} onClick={async () => { setBusy(true); try { await onDelete(listing); onClose(); } catch (deleteError) { console.error("Could not remove marketplace listing", deleteError); setError(lang === "th" ? "ลบรายการไม่สำเร็จ โปรดลองอีกครั้ง" : "Could not remove this listing. Please try again."); } finally { setBusy(false); } }}><Trash2 size={17} /> {lang === "th" ? "ลบรายการ" : "Remove listing"}</button>
+                  </span>
                 : <button className="primary-button" onClick={() => setCheckoutOpen(true)}><ShoppingBag size={17} /> {lang === "th" ? "ซื้อจากสมาชิก" : "Buy from member"}</button>}
             </div>
             {error && <p className="feed-error" role="alert">{error}</p>}
@@ -1842,12 +1965,13 @@ function ListingDetailSheet({ listing, userId, currentMember, onClose, onPurchas
   );
 }
 
-function MarketView({ profile, userId, onPurchase, onDelete, onCreate, openNotification, onNotificationOpened }: {
+function MarketView({ profile, userId, onPurchase, onDelete, onCreate, onUpdate, openNotification, onNotificationOpened }: {
   profile: Profile;
   userId: string;
   onPurchase: (listing: MarketplaceListing, method: DemoPaymentMethod) => Promise<void>;
   onDelete: (listing: MarketplaceListing) => Promise<void>;
   onCreate: (listing: MarketplaceListing) => Promise<void>;
+  onUpdate: (listing: MarketplaceListing) => Promise<void>;
   openNotification: FriendActivityNotification | null;
   onNotificationOpened: () => void;
 }) {
@@ -1855,6 +1979,7 @@ function MarketView({ profile, userId, onPurchase, onDelete, onCreate, openNotif
   const { listings, loading, error } = useMarketplaceListings(lang);
   const [selected, setSelected] = useState<MarketplaceListing | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [editingListing, setEditingListing] = useState<MarketplaceListing | null>(null);
   const [query, setQuery] = useState("");
   useEffect(() => {
     if (openNotification?.type !== "listing" || !openNotification.listingData) return;
@@ -1870,7 +1995,7 @@ function MarketView({ profile, userId, onPurchase, onDelete, onCreate, openNotif
     <div className="market-grid">
       <section className="market-hero">
         <div><span className="eyebrow">Sustain-Second</span><h2>{lang === "th" ? <>เสื้อผ้าดี<br />เรื่องราวบทใหม่</> : <>Good pieces,<br />next chapters.</>}</h2><p>{lang === "th" ? "ซื้อและขายเสื้อผ้ามือสองระหว่างสมาชิก Reweave" : "Buy and sell pre-loved clothes directly with other Reweave members."}</p></div>
-        <button className="primary-button sell-button" onClick={() => setComposerOpen(true)}><Plus size={18} /> {lang === "th" ? "ลงขายเสื้อผ้า" : "Sell an item"}</button>
+        <button className="primary-button sell-button" onClick={() => { setEditingListing(null); setComposerOpen(true); }}><Plus size={18} /> {lang === "th" ? "ลงขายเสื้อผ้า" : "Sell an item"}</button>
       </section>
       <label className="search-field marketplace-search"><Search size={18} /><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t.shopSearch} aria-label={t.shopSearch} /></label>
       {error && <p className="feed-error" role="alert">{error}</p>}
@@ -1886,8 +2011,8 @@ function MarketView({ profile, userId, onPurchase, onDelete, onCreate, openNotif
           <span className="listing-open-icon" aria-hidden="true"><ArrowRight size={18} /></span>
         </article>
       ))}
-      {selected && <ListingDetailSheet listing={selected} userId={userId} currentMember={{ name: profile.displayName, handle: profile.username, avatar: profile.avatar }} onClose={() => setSelected(null)} onPurchase={onPurchase} onDelete={onDelete} />}
-      {composerOpen && <ListingComposer userId={userId} profile={profile} onClose={() => setComposerOpen(false)} onSave={onCreate} />}
+      {selected && <ListingDetailSheet listing={selected} userId={userId} currentMember={{ name: profile.displayName, handle: profile.username, avatar: profile.avatar }} onClose={() => setSelected(null)} onPurchase={onPurchase} onDelete={onDelete} onEdit={(listing) => { setSelected(null); setEditingListing(listing); setComposerOpen(true); }} />}
+      {composerOpen && <ListingComposer userId={userId} profile={profile} initial={editingListing ?? undefined} onClose={() => { setComposerOpen(false); setEditingListing(null); }} onSave={onCreate} onUpdate={onUpdate} />}
     </div>
   );
 }
@@ -1952,13 +2077,14 @@ function BoardView() {
   );
 }
 
-function CommunityView({ state, userId, onPosted, onPurchase, onDeleteListing, onCreateListing, openNotification, onNotificationOpened }: {
+function CommunityView({ state, userId, onPosted, onPurchase, onDeleteListing, onCreateListing, onUpdateListing, openNotification, onNotificationOpened }: {
   state: DemoState;
   userId: string;
   onPosted: () => void;
   onPurchase: (listing: MarketplaceListing, method: DemoPaymentMethod) => Promise<void>;
   onDeleteListing: (listing: MarketplaceListing) => Promise<void>;
   onCreateListing: (listing: MarketplaceListing) => Promise<void>;
+  onUpdateListing: (listing: MarketplaceListing) => Promise<void>;
   openNotification: FriendActivityNotification | null;
   onNotificationOpened: () => void;
 }) {
@@ -1976,7 +2102,7 @@ function CommunityView({ state, userId, onPosted, onPurchase, onDeleteListing, o
       </div>
       {tab === "feed"
         ? <FeedView garments={state.garments} profile={state.profile} userId={userId} bonusAvailable={state.postBonusOn !== TODAY} onPosted={onPosted} openNotification={openNotification} onNotificationOpened={onNotificationOpened} />
-        : <MarketView profile={state.profile} userId={userId} onPurchase={onPurchase} onDelete={onDeleteListing} onCreate={onCreateListing} openNotification={openNotification} onNotificationOpened={onNotificationOpened} />}
+        : <MarketView profile={state.profile} userId={userId} onPurchase={onPurchase} onDelete={onDeleteListing} onCreate={onCreateListing} onUpdate={onUpdateListing} openNotification={openNotification} onNotificationOpened={onNotificationOpened} />}
     </div>
   );
 }
@@ -1993,6 +2119,7 @@ function EditProfileSheet({
   const [draft, setDraft] = useState(profile);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [saveError, setSaveError] = useState("");
   return (
     <div className="overlay" onClick={onClose}>
       <article className="sheet edit-profile-sheet" onClick={(event) => event.stopPropagation()}>
@@ -2035,7 +2162,20 @@ function EditProfileSheet({
           <label><span>Default post visibility</span><select value={draft.privacy} onChange={(event) => setDraft({ ...draft, privacy: event.target.value })}><option value="private">Private</option><option value="public">Community</option></select></label>
           <label><span>Email</span><input value={draft.email} disabled /></label>
         </div>
-        <button className="primary-button full" disabled={saving} onClick={async () => { setSaving(true); await onSave(draft); setSaving(false); onClose(); }}>{saving ? <LoaderCircle className="spin" size={17} /> : <Check size={17} />} Save profile</button>
+        {saveError && <p className="form-error" role="alert">{saveError}</p>}
+        <button className="primary-button full" disabled={saving} onClick={async () => {
+          setSaving(true);
+          setSaveError("");
+          try {
+            await onSave(draft);
+            onClose();
+          } catch (error) {
+            console.error("Could not save profile changes", error);
+            setSaveError("Could not save your profile. Please try again.");
+          } finally {
+            setSaving(false);
+          }
+        }}>{saving ? <LoaderCircle className="spin" size={17} /> : <Check size={17} />} Save profile</button>
       </article>
     </div>
   );
@@ -2415,6 +2555,8 @@ export default function App() {
   const [tab, setTab] = useState<MainTab>("plant");
   const { user, logout } = useAuth();
   const [state, setState] = useState<DemoState>(initialState);
+  const stateRef = useRef(state);
+  const soldGarmentsInProgress = useRef(new Set<string>());
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
   const [tourOpen, setTourOpen] = useState(false);
@@ -2446,6 +2588,41 @@ export default function App() {
   const notificationCount = Number(waterReminderDue) + activities.filter((activity) => !readActivityIds.includes(activity.id)).length;
   const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("reweave-language") as Lang) || "en");
   const t = copy[lang];
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    if (!ready) return;
+    return subscribeMarketplaceListings((listings) => {
+      const soldListingIds = new Set(listings
+        .filter((listing) => listing.sellerId === user.uid && listing.sold && listing.sourceGarmentId)
+        .map((listing) => listing.id));
+      const ownedForSale = stateRef.current.garments.filter((garment) =>
+        garment.marketplaceListingId && soldListingIds.has(garment.marketplaceListingId)
+        && !soldGarmentsInProgress.current.has(String(garment.id)));
+      ownedForSale.forEach((garment) => {
+        const garmentId = String(garment.id);
+        soldGarmentsInProgress.current.add(garmentId);
+        void removeGarment(user.uid, garment.id).then(() => {
+          setState((current) => ({
+            ...current,
+            garments: current.garments.filter((item) => String(item.id) !== garmentId),
+          }));
+        }).catch((error) => {
+          console.error("Could not remove sold clothing from the seller's closet", error);
+          setNotice(lang === "th"
+            ? "ขายสำเร็จแล้ว แต่ลบเสื้อผ้าออกจากตู้ไม่สำเร็จ โปรดตรวจสอบกฎ Firestore"
+            : "The item sold, but could not be removed from your closet. Check the Firestore rules.");
+        }).finally(() => {
+          soldGarmentsInProgress.current.delete(garmentId);
+        });
+      });
+    }, (error) => {
+      console.error("Could not monitor sold marketplace listings", error);
+    });
+  }, [lang, ready, user.uid]);
 
   // Load this user's data from Firestore once after login
   useEffect(() => {
@@ -2486,6 +2663,7 @@ export default function App() {
       }
       next = {
         ...next,
+        profile: { ...next.profile, id: user.uid },
         plant: checkPlant(next.plant, TODAY),
         closets: Array.from(new Set([DEFAULT_CLOSET, ...(Array.isArray(next.closets) ? next.closets : [])])),
       };
@@ -2628,11 +2806,49 @@ export default function App() {
   };
 
   const saveProfile = async (changes: Partial<Profile>) => {
+    const updatedProfile = { ...state.profile, ...changes };
+    await saveUser(user.uid, { profile: updatedProfile });
     setState((current) => ({ ...current, profile: { ...current.profile, ...changes } }));
+
+    try {
+      await updateCommunityPostAuthors(
+        user.uid,
+        updatedProfile.displayName,
+        updatedProfile.username,
+        updatedProfile.avatar,
+        updatedProfile.bio,
+      );
+    } catch (error) {
+      console.error("Could not update author details on community posts", error);
+      setNotice(lang === "th"
+        ? "บันทึกโปรไฟล์แล้ว แต่อัปเดตข้อมูลผู้เขียนในโพสต์เดิมไม่สำเร็จ โปรดตรวจสอบกฎ Firestore"
+        : "Profile saved, but author details on some existing posts could not be updated. Check the Firestore rules.");
+    }
   };
 
   const purchase = async (listing: MarketplaceListing, paymentMethod: DemoPaymentMethod) => {
-    await completeMockPurchase(listing, user.uid, state.profile.displayName, paymentMethod);
+    const garmentId = await completeMockPurchase(listing, user.uid, state.profile.displayName, paymentMethod);
+    const purchasedGarment: Garment = {
+      id: garmentId,
+      name: listing.name,
+      type: listing.type,
+      color: "Not specified",
+      material: listing.material,
+      components: listing.material,
+      style: listing.style,
+      occasion: "Everyday",
+      owner: state.profile.displayName,
+      closet: DEFAULT_CLOSET,
+      image: listing.image,
+      notes: [
+        listing.size ? `Size: ${listing.size}` : "",
+        listing.condition ? `Condition: ${listing.condition}` : "",
+        listing.description,
+        Array.isArray(listing.tags) && listing.tags.length ? `Tags: ${listing.tags.join(", ")}` : "",
+        `Purchased for ฿${listing.price}`,
+      ].filter(Boolean).join(" · "),
+      wearCount: 0,
+    };
     setState((current) => {
       const hasCredit = current.profile.buyingCredits > 0;
       const profile = {
@@ -2640,11 +2856,18 @@ export default function App() {
         buyingCredits: Math.max(0, current.profile.buyingCredits - 1),
         points: current.profile.points + 50,
       };
-      return { ...current, profile, points: profile.points, plant: hasCredit ? current.plant : { ...current.plant, alive: false, streak: 0 } };
+      return {
+        ...current,
+        garments: [purchasedGarment, ...current.garments],
+        profile,
+        points: profile.points,
+        plant: hasCredit ? current.plant : { ...current.plant, alive: false, streak: 0 },
+      };
     });
   };
 
   const createListing = (listing: MarketplaceListing) => createMarketplaceListing(listing);
+  const updateListing = (listing: MarketplaceListing) => updateMarketplaceListing(listing, user.uid);
   const deleteListing = (listing: MarketplaceListing) => deleteMarketplaceListing(listing.id, user.uid);
 
   const friendWater = async (friend: CommunityFriend) => {
@@ -2683,8 +2906,8 @@ export default function App() {
       <main>
         <Header title={heading.title} eyebrow={heading.eyebrow} dark={state.dark} notificationCount={notificationCount} onTheme={() => setState((current) => ({ ...current, dark: !current.dark }))} onLanguage={() => setLang((current) => current === "en" ? "th" : "en")} onChat={() => setFriendsOpen(true)} onNotifications={() => setNotificationsOpen(true)} />
         {tab === "plant" && <PlantView state={state} onWater={waterPlant} onReplant={replant} />}
-        {tab === "closet" && <ClosetView state={state} userId={user.uid} onCreate={createGarment} onUpdate={updateGarment} onDelete={deleteGarment} onAddCloset={addCloset} onDeleteCloset={deleteCloset} onPurchase={purchase} onDeleteListing={deleteListing} />}
-        {tab === "community" && <CommunityView state={state} userId={user.uid} onPosted={claimPostBonus} onPurchase={purchase} onDeleteListing={deleteListing} onCreateListing={createListing} openNotification={pendingActivity} onNotificationOpened={clearPendingActivity} />}
+        {tab === "closet" && <ClosetView state={state} userId={user.uid} onCreateListing={createListing} onUpdateListing={updateListing} onCreate={createGarment} onUpdate={updateGarment} onDelete={deleteGarment} onAddCloset={addCloset} onDeleteCloset={deleteCloset} onPurchase={purchase} onDeleteListing={deleteListing} />}
+        {tab === "community" && <CommunityView state={state} userId={user.uid} onPosted={claimPostBonus} onPurchase={purchase} onDeleteListing={deleteListing} onCreateListing={createListing} onUpdateListing={updateListing} openNotification={pendingActivity} onNotificationOpened={clearPendingActivity} />}
         {tab === "profile" && <ProfileView state={state} userId={user.uid} friends={friends} unreadByChat={unreadByChat} setState={setState} onSaveProfile={saveProfile} notifications={notificationPreferences} onSaveNotifications={setNotificationPreferences} onChat={() => setFriendsOpen(true)} onFriendWater={friendWater} onChatWithFriend={openChat} />}
       </main>
       <BottomNav tab={tab} setTab={setTab} />
