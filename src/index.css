@@ -487,13 +487,19 @@ main { width: min(1180px, calc(100% - 48px)); margin: auto; padding: 0 0 110px; 
 
 .post-detail-sheet { width: min(980px, 100%); height: min(720px, 90vh); max-height: 90vh; padding: 0; display: grid; grid-template-columns: 1.25fr .75fr; align-self: center; overflow: hidden; }
 .post-detail-sheet > img { width: 100%; height: 100%; object-fit: cover; background: var(--sage-light); }
-.post-detail-side { min-width: 0; min-height: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.post-detail-side { min-width: 0; min-height: 0; height: 100%; display: grid; grid-template-rows: auto minmax(96px, 1fr) auto minmax(72px, 1fr) auto auto; grid-template-areas: "user" "copy" "tagged" "comments" "actions" "commentbox"; overflow: hidden; }
+.post-detail-user { grid-area: user; }
+.post-copy { grid-area: copy; }
+.post-tagged-pieces { grid-area: tagged; }
+.comments { grid-area: comments; }
+.post-detail-actions { grid-area: actions; }
+.comment-box { grid-area: commentbox; }
 .post-detail-user, .post-copy, .post-tagged-pieces, .post-detail-actions, .comment-box { flex: 0 0 auto; }
 .post-detail-user { padding: 14px; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 9px; border-bottom: 1px solid var(--line); }
 .post-detail-user > button { border: 0; padding: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
 .post-detail-user > button:nth-child(2) { display: flex; flex-direction: column; }
 .post-detail-user small { color: var(--ink-soft); font-size: 8px; }
-.post-copy { padding: 20px; }
+.post-copy { min-height: 0; padding: 20px; overflow-y: auto; }
 .post-copy h2 { margin: 0 0 8px; font-size: 28px; }
 .post-copy p { color: var(--ink-soft); font-size: 11px; line-height: 1.6; }
 .post-copy span { color: var(--green); font-size: 9px; }
@@ -518,11 +524,11 @@ main { width: min(1180px, calc(100% - 48px)); margin: auto; padding: 0 0 110px; 
 .tagged-piece-detail-copy > p span { text-align: right; overflow-wrap: anywhere; }
 .tagged-piece-detail-copy > .tagged-piece-notes { display: block; line-height: 1.55; }
 .tagged-piece-notes strong { display: block; margin-bottom: 5px; color: var(--ink-soft); }
-.comments { order: 2; flex: 1 1 auto; min-height: 72px; padding: 0 20px; overflow-y: auto; }
+.comments { min-height: 0; padding: 0 20px; overflow-y: auto; }
 .comments-heading { display: block; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 10px; }
 .comments p { font-size: 10px; line-height: 1.5; }
 .comments .comments-empty { color: var(--ink-soft); }
-.post-detail-actions { order: 1; min-height: 52px; padding: 8px 12px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.post-detail-actions { min-height: 52px; padding: 8px 12px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .post-detail-actions button, .post-comment-count { min-width: 0; border: 0; padding: 6px 4px; display: flex; align-items: center; gap: 5px; color: inherit; background: transparent; font-size: 9px; cursor: pointer; }
 .post-comment-count { cursor: default; }
 .post-detail-actions .post-like-action { color: var(--green); }
@@ -530,7 +536,7 @@ main { width: min(1180px, calc(100% - 48px)); margin: auto; padding: 0 0 110px; 
 .post-detail-actions button:disabled { opacity: .6; cursor: wait; }
 .post-detail-actions button span { white-space: nowrap; }
 .post-detail-actions .send-post-action { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 100px; padding: 8px 10px; color: var(--green); font-weight: 700; }
-.comment-box { order: 3; min-height: 58px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-top: 1px solid var(--line); padding: 8px 12px; background: var(--paper); }
+.comment-box { min-height: 58px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-top: 1px solid var(--line); padding: 8px 12px; background: var(--paper); }
 .comment-box input { min-width: 0; width: 100%; height: 38px; }
 .comment-box input { border: 0; outline: 0; color: var(--ink); background: transparent; }
 .comment-box button { min-height: 34px; border: 0; border-radius: 8px; padding: 0 10px; color: var(--paper); background: var(--green); font-size: 10px; font-weight: 700; cursor: pointer; }
@@ -819,8 +825,11 @@ html[lang="th"] .coupon-wallet article strong { font-family: "Noto Sans Thai", s
   .composer-fields { grid-template-columns: 1fr; }
   .post-detail-sheet { display: block; height: 94vh; align-self: flex-end; overflow-y: auto; }
   .post-detail-sheet > img { height: 48vh; }
-  .post-detail-side { height: auto; min-height: 420px; display: flex; overflow: visible; }
-  .comments { min-height: 110px; }
+  .post-detail-side { height: auto; min-height: 420px; display: flex; flex-direction: column; overflow: visible; }
+  .post-copy { overflow: visible; }
+  .comments { order: 2; min-height: 110px; }
+  .post-detail-actions { order: 1; }
+  .comment-box { order: 3; }
   .settings-sheet, .point-shop-sheet, .notification-sheet { align-self: flex-end; }
   .coupon-card { grid-template-columns: auto 1fr; }
   .coupon-card > button { grid-column: 1 / -1; width: 100%; }

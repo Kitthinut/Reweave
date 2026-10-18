@@ -27,8 +27,17 @@ const ERRORS: Record<string, string> = {
   "auth/too-many-requests": "Too many attempts. Please wait a bit and try again.",
   "auth/network-request-failed": "Network problem. Check your connection.",
 };
+const THAI_ERRORS: Record<string, string> = {
+  "auth/invalid-credential": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+  "auth/invalid-email": "รูปแบบอีเมลไม่ถูกต้อง",
+  "auth/email-already-in-use": "มีบัญชีที่ใช้อีเมลนี้อยู่แล้ว",
+  "auth/weak-password": "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+  "auth/too-many-requests": "พยายามเข้าสู่ระบบหลายครั้งเกินไป โปรดรอสักครู่แล้วลองใหม่",
+  "auth/network-request-failed": "การเชื่อมต่อเครือข่ายมีปัญหา โปรดตรวจสอบอินเทอร์เน็ต",
+};
 
 export default function AuthGate({ children }: { children: ReactNode }) {
+  const [lang, setLang] = useState<"en" | "th">(() => localStorage.getItem("reweave-language") === "th" ? "th" : "en");
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -47,6 +56,11 @@ export default function AuthGate({ children }: { children: ReactNode }) {
     [],
   );
 
+  useEffect(() => {
+    localStorage.setItem("reweave-language", lang);
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setError("");
@@ -60,13 +74,16 @@ export default function AuthGate({ children }: { children: ReactNode }) {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       }
     } catch (e: any) {
-      setError(ERRORS[e?.code] ?? "Something went wrong. Please try again.");
+      const code = e?.code as string | undefined;
+      setError(lang === "th"
+        ? (code ? THAI_ERRORS[code] : undefined) ?? "เกิดข้อผิดพลาด โปรดลองอีกครั้ง"
+        : (code ? ERRORS[code] : undefined) ?? "Something went wrong. Please try again.");
     } finally {
       setBusy(false);
     }
   };
 
-  if (checking) return <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", color: "var(--ink-soft)" }}>Loading…</div>;
+  if (checking) return <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", color: "var(--ink-soft)" }}>{lang === "th" ? "กำลังโหลด…" : "Loading…"}</div>;
 
   if (user && !busy) {
     return <AuthContext.Provider value={{ user, logout: () => signOut(auth) }}>{children}</AuthContext.Provider>;
@@ -77,15 +94,18 @@ export default function AuthGate({ children }: { children: ReactNode }) {
   return (
     <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "var(--cream)", padding: 20 }}>
       <form onSubmit={submit} style={{ width: "min(400px, 100%)", background: "var(--paper)", borderRadius: 24, padding: 28, boxShadow: "var(--shadow)", display: "grid", gap: 14, color: "var(--ink)" }}>
-        <h1 style={{ margin: 0, fontSize: 28 }}>reweave</h1>
-        <p style={{ margin: 0, color: "var(--ink-soft)" }}>{mode === "login" ? "Welcome back. Your cotton misses you." : "Create an account and plant your cotton."}</p>
-        {mode === "signup" && <input style={field} placeholder="Display name" value={name} onChange={(e) => setName(e.target.value)} required />}
-        <input style={field} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
-        <input style={field} type="password" placeholder="Password (6+ characters)" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete={mode === "login" ? "current-password" : "new-password"} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h1 style={{ margin: 0, fontSize: 28 }}>reweave</h1>
+          <button type="button" className="language-button" onClick={() => setLang((current) => current === "en" ? "th" : "en")} aria-label={lang === "th" ? "เปลี่ยนภาษา" : "Change language"}>{lang === "th" ? "ภาษาอังกฤษ" : "ไทย"}</button>
+        </div>
+        <p style={{ margin: 0, color: "var(--ink-soft)" }}>{mode === "login" ? (lang === "th" ? "ยินดีต้อนรับกลับมา ต้นฝ้ายของคุณรออยู่นะ" : "Welcome back. Your cotton misses you.") : (lang === "th" ? "สร้างบัญชีแล้วเริ่มปลูกต้นฝ้ายของคุณ" : "Create an account and plant your cotton.")}</p>
+        {mode === "signup" && <input style={field} placeholder={lang === "th" ? "ชื่อที่ใช้แสดง" : "Display name"} value={name} onChange={(e) => setName(e.target.value)} required />}
+        <input style={field} type="email" placeholder={lang === "th" ? "อีเมล" : "Email"} value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+        <input style={field} type="password" placeholder={lang === "th" ? "รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" : "Password (6+ characters)"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete={mode === "login" ? "current-password" : "new-password"} />
         {error && <div role="alert" style={{ color: "#b3261e", fontSize: 14 }}>{error}</div>}
-        <button className="primary-button" type="submit" disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Log in" : "Sign up"}</button>
+        <button className="primary-button" type="submit" disabled={busy}>{busy ? (lang === "th" ? "กรุณารอสักครู่…" : "Please wait…") : mode === "login" ? (lang === "th" ? "เข้าสู่ระบบ" : "Log in") : (lang === "th" ? "สมัครสมาชิก" : "Sign up")}</button>
         <button type="button" className="secondary-button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}>
-          {mode === "login" ? "New here? Create an account" : "Already have an account? Log in"}
+          {mode === "login" ? (lang === "th" ? "ยังไม่มีบัญชีใช่ไหม? สมัครสมาชิก" : "New here? Create an account") : (lang === "th" ? "มีบัญชีอยู่แล้ว? เข้าสู่ระบบ" : "Already have an account? Log in")}
         </button>
       </form>
     </div>

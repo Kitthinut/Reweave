@@ -70,11 +70,11 @@ const copy = {
   },
   th: {
     plant: "ต้นฝ้าย", closet: "ตู้เสื้อผ้า", community: "ชุมชน", profile: "โปรไฟล์",
-    language: "EN", morning: "สวัสดีตอนเช้า", wardrobe: "ตู้เสื้อผ้าของคุณ", wardrobeSub: "ใส่เสื้อผ้าที่คุณรักให้คุ้มค่า",
+    language: "ภาษาอังกฤษ", morning: "สวัสดีตอนเช้า", wardrobe: "ตู้เสื้อผ้าของคุณ", wardrobeSub: "สวมใส่เสื้อผ้าที่คุณรักให้คุ้มค่า",
     circle: "ชุมชน Reweave", circleSub: "แบ่งปันสไตล์ที่มีความหมาย", space: "พื้นที่ของคุณ", spaceSub: "โปรไฟล์และผลลัพธ์",
-    myCloset: "ตู้ของฉัน", match: "จับคู่!", looks: "แฟชั่น", shop: "ร้านเสื้อผ้ามือสอง",
+    myCloset: "ตู้เสื้อผ้าของฉัน", match: "จับคู่ชุด", looks: "ชุดแต่งตัว", shop: "ร้านเสื้อผ้ามือสอง",
     editProfile: "แก้ไขโปรไฟล์", pointShop: "ร้านค้าคะแนน", friends: "เพื่อนและแชต", privacy: "ความเป็นส่วนตัว",
-    shareLook: "แชร์ลุค", whatRewear: "วันนี้คุณใส่ชุดไหนซ้ำ?", addPiece: "เพิ่มเสื้อผ้า",
+    shareLook: "แบ่งปันชุดแต่งตัว", whatRewear: "วันนี้คุณนำชุดไหนกลับมาใส่ซ้ำ?", addPiece: "เพิ่มเสื้อผ้า",
     search: "ค้นหาเสื้อผ้า", communitySearch: "ค้นหาเสื้อผ้า แฟชั่น หรือแท็กสไตล์", shopSearch: "ค้นหาเสื้อผ้า สไตล์ หรือแท็ก", details: "เลื่อนดู · แตะเพื่อดูรายละเอียด", coupons: "คูปองและรางวัลซ่อมเสื้อผ้า",
   },
 } as const;
@@ -82,6 +82,209 @@ const copy = {
 type Translation = { [Key in keyof typeof copy.en]: string };
 const LanguageContext = createContext<{ lang: Lang; t: Translation }>({ lang: "en", t: copy.en });
 const useLanguage = () => useContext(LanguageContext);
+const thaiLabels: Record<string, string> = {
+  "day streak": "สถิติสะสมต่อเนื่อง",
+  "buying credit": "สิทธิ์ซื้อเสื้อผ้า",
+  "days to full": "วันที่เหลือจนเติบโตเต็มที่",
+  "Growth journey": "เส้นทางการเติบโต",
+  "From seed to soft cotton": "จากเมล็ดสู่ปุยฝ้ายอ่อนนุ่ม",
+  "Today’s thread": "เรื่องราวสิ่งทอวันนี้",
+  "Today’s thread · 02": "เรื่องราวสิ่งทอวันนี้ · 02",
+  "Small wardrobe choices have a long afterlife.": "การเลือกดูแลเสื้อผ้าในวันนี้ส่งผลดีต่อโลกได้อีกยาวนาน",
+  "day": "วัน",
+  "days": "วัน",
+  "Days": "วันที่",
+  "Your cotton needs a fresh start": "ต้นฝ้ายของคุณพร้อมเริ่มต้นใหม่",
+  "Today’s care is complete": "ดูแลต้นฝ้ายวันนี้แล้ว",
+  "Your cotton is ready": "ต้นฝ้ายพร้อมรับน้ำ",
+  "Time to replant": "ถึงเวลาปลูกต้นใหม่",
+  "Watered and thriving": "รดน้ำแล้ว ต้นฝ้ายกำลังเติบโต",
+  "A little water goes far": "น้ำเพียงเล็กน้อยช่วยให้เติบโตได้",
+  "Your points and closet are safe.": "คะแนนและตู้เสื้อผ้าของคุณยังอยู่ครบ",
+  "Come back tomorrow to continue your streak.": "กลับมาพรุ่งนี้เพื่อสานต่อสถิติการดูแล",
+  "Water once today before midnight.": "รดน้ำวันนี้หนึ่งครั้งก่อนเที่ยงคืน",
+  "Care notes": "บันทึกการดูแล",
+  "Edit piece": "แก้ไขเสื้อผ้า",
+  "Add your first piece": "เพิ่มเสื้อผ้าชิ้นแรก",
+  "Your circular impact": "ผลลัพธ์ด้านความยั่งยืนของคุณ",
+  "points": "คะแนน",
+  "cared days": "วันที่ดูแลต้นฝ้าย",
+  "rewears": "ครั้งที่นำกลับมาใส่",
+  "Appearance": "รูปแบบการแสดงผล",
+  "Dark mode": "โหมดมืด",
+  "Light mode": "โหมดสว่าง",
+  "Friends’ gardens": "สวนของเพื่อน",
+  "A little help travels.": "การช่วยเหลือเล็กน้อยส่งต่อถึงกันได้",
+  "Default closet": "ตู้เสื้อผ้าหลัก",
+  "Your collection": "คอลเลกชันของคุณ",
+  "Drag pieces to move · Tap for details": "ลากเสื้อผ้าเพื่อย้าย · แตะเพื่อดูรายละเอียด",
+  "Delete closet": "ลบตู้เสื้อผ้า",
+  "Details": "รายละเอียด",
+  "In shop": "ลงขายแล้ว",
+  "pieces": "ชิ้น",
+  "closets": "ตู้เสื้อผ้า",
+  "natural fibers": "เส้นใยธรรมชาติ",
+  "Filter": "ตัวกรอง",
+  "Close": "ปิด",
+  "Change language": "เปลี่ยนภาษา",
+  "Toggle color theme": "สลับธีมสี",
+  "Open messages": "เปิดข้อความ",
+  "Main navigation": "เมนูหลัก",
+  "Like post": "ถูกใจโพสต์",
+  "Remove like": "เลิกถูกใจโพสต์",
+  "Send post to a friend": "ส่งโพสต์ให้เพื่อน",
+  "Delete": "ลบ",
+  "Save changes": "บันทึกการเปลี่ยนแปลง",
+  "Sell in shop": "ลงขายในร้าน",
+  "Log out": "ออกจากระบบ",
+  "CARE / WEAR / SHARE": "ดูแล / สวมใส่ / แบ่งปัน",
+  "Loading your garden…": "กำลังโหลดสวนของคุณ…",
+  "Dev tools": "เครื่องมือสำหรับนักพัฒนา",
+  "Set": "ตั้งค่า",
+  "Top": "เสื้อท่อนบน",
+  "Shirt": "เสื้อเชิ้ต",
+  "T-shirt": "เสื้อยืด",
+  "Blouse": "เสื้อผู้หญิง",
+  "Sweater": "เสื้อไหมพรม",
+  "Hoodie": "เสื้อมีฮู้ด",
+  "Jacket": "แจ็กเก็ต",
+  "Coat": "เสื้อโค้ต",
+  "Dress": "ชุดเดรส",
+  "Skirt": "กระโปรง",
+  "Pants": "กางเกง",
+  "Jeans": "กางเกงยีนส์",
+  "Shorts": "กางเกงขาสั้น",
+  "Shoes": "รองเท้า",
+  "Bag": "กระเป๋า",
+  "Other": "อื่น ๆ",
+  "Minimal": "มินิมอล",
+  "Street": "สตรีต",
+  "Streetwear": "สตรีตแวร์",
+  "Classic": "คลาสสิก",
+  "Casual": "ลำลอง",
+  "Vintage": "วินเทจ",
+  "Sporty": "สปอร์ต",
+  "Bohemian": "โบฮีเมียน",
+  "Workwear": "ชุดทำงาน",
+  "Formal": "ทางการ",
+  "Preppy": "พรีปปี้",
+  "Outdoor": "เอาต์ดอร์",
+  "Everyday": "ใส่ได้ทุกวัน",
+  "Work": "ทำงาน",
+  "Party": "งานเลี้ยง",
+  "Sport": "กีฬา",
+  "New with tags": "ใหม่พร้อมป้าย",
+  "Like new": "เหมือนใหม่",
+  "Very good": "ดีมาก",
+  "Good": "ดี",
+  "Well loved": "ผ่านการใช้งานอย่างดี",
+  "Natural fibers": "เส้นใยธรรมชาติ",
+  "Layering": "การแต่งตัวแบบเลเยอร์",
+  "Monochrome": "สีโทนเดียว",
+  "Upcycled": "นำวัสดุกลับมาแปรรูป",
+  "Repaired": "ซ่อมแซมแล้ว",
+  "Statement": "โดดเด่น",
+  "Relaxed fit": "ทรงหลวมสบาย",
+  "Tailored": "ตัดเย็บเข้ารูป",
+  "Denim": "ผ้าเดนิม",
+  "Knitwear": "เสื้อผ้าถัก",
+  "Outerwear": "เสื้อคลุม",
+  "One size": "ฟรีไซซ์",
+  "Repair": "ซ่อมแซม",
+  "Care": "ดูแลเสื้อผ้า",
+  "Black": "สีดำ",
+  "White": "สีขาว",
+  "Ivory": "สีงาช้าง",
+  "Oat": "สีโอ๊ต",
+  "Beige": "สีเบจ",
+  "Tan": "สีน้ำตาลแทนอ่อน",
+  "Brown": "สีน้ำตาล",
+  "Charcoal": "สีเทาถ่าน",
+  "Gray": "สีเทา",
+  "Light gray": "สีเทาอ่อน",
+  "Navy": "สีกรมท่า",
+  "Indigo": "สีคราม",
+  "Blue": "สีน้ำเงิน",
+  "Sky blue": "สีฟ้า",
+  "Teal": "สีเขียวน้ำทะเล",
+  "Green": "สีเขียว",
+  "Moss": "สีเขียวมอส",
+  "Sage": "สีเขียวเสจ",
+  "Olive": "สีเขียวมะกอก",
+  "Yellow": "สีเหลือง",
+  "Mustard": "สีเหลืองมัสตาร์ด",
+  "Orange": "สีส้ม",
+  "Rust": "สีสนิม",
+  "Red": "สีแดง",
+  "Burgundy": "สีแดงเบอร์กันดี",
+  "Pink": "สีชมพู",
+  "Rose": "สีชมพูกุหลาบ",
+  "Purple": "สีม่วง",
+  "Lavender": "สีลาเวนเดอร์",
+  "Make more from": "สร้างสรรค์ได้มากขึ้นจาก",
+  "what you own.": "เสื้อผ้าที่คุณมี",
+  "Build a look yourself, or add a reference and let Reweave find the closest match in your closet.": "จัดชุดด้วยตัวเอง หรือเพิ่มรูปอ้างอิงให้ Reweave ช่วยค้นหาเสื้อผ้าในตู้ที่ใกล้เคียงที่สุด",
+  "Add a few pieces to your closet first.": "เพิ่มเสื้อผ้าลงตู้ก่อนสักสองสามชิ้น",
+  "Add layer": "เพิ่มเสื้อผ้าอีกชั้น",
+  "Add reference": "เพิ่มรูปอ้างอิง",
+  "Every cared-for day keeps textiles in use.": "ทุกวันที่ดูแลต้นฝ้ายช่วยให้เสื้อผ้าถูกใช้งานได้นานขึ้น",
+  "unread messages": "ข้อความที่ยังไม่ได้อ่าน",
+  "Verified member": "สมาชิกที่ยืนยันตัวตนแล้ว",
+  "Member": "สมาชิก",
+  "Style direction": "แนวทางสไตล์",
+  "Upload a reference photo": "อัปโหลดรูปภาพอ้างอิง",
+  "Upload reference photo": "อัปโหลดรูปภาพอ้างอิง",
+  "Name": "ชื่อ",
+  "Type": "ประเภท",
+  "Owner": "เจ้าของ",
+  "Composition": "ส่วนประกอบของผ้า",
+  "Color": "สี",
+  "Style": "สไตล์",
+  "Occasion": "โอกาส",
+  "Closet": "ตู้เสื้อผ้า",
+  "Saved": "บันทึกแล้ว",
+  "Save look": "บันทึกชุดแต่งตัว",
+  "New outfit": "ชุดแต่งตัวใหม่",
+  "Tap a piece to begin": "แตะเสื้อผ้าเพื่อเริ่มต้น",
+  "96% from your closet": "ใช้เสื้อผ้าจากตู้ของคุณ 96%",
+  "Soft city layers": "ชุดเลเยอร์สบาย ๆ สำหรับวันในเมือง",
+  "Member shop matches": "รายการจากร้านสมาชิกที่เข้ากัน",
+  "Secondhand pieces that fit your wardrobe": "เสื้อผ้ามือสองที่เข้ากับตู้เสื้อผ้าของคุณ",
+  "No member listings match the pieces in your closet yet.": "ยังไม่มีรายการจากสมาชิกที่เข้ากับเสื้อผ้าในตู้ของคุณ",
+  "Condition": "สภาพ",
+  "Size": "ขนาด",
+  "Material": "วัสดุ",
+  "Description": "รายละเอียด",
+  "Choose type": "เลือกประเภท",
+  "Choose size": "เลือกขนาด",
+  "Choose condition": "เลือกสภาพ",
+  "Choose a style": "เลือกสไตล์",
+  "Item name": "ชื่อเสื้อผ้า",
+  "Price (THB)": "ราคา (บาท)",
+  "Upload clothing photos": "อัปโหลดรูปเสื้อผ้า",
+  "Mock QR code preview": "ตัวอย่างคิวอาร์โค้ดจำลอง",
+  "Account details": "รายละเอียดบัญชี",
+  "Edit profile": "แก้ไขโปรไฟล์",
+  "Display name": "ชื่อที่ใช้แสดง",
+  "Username": "ชื่อผู้ใช้",
+  "Age": "อายุ",
+  "Location": "ที่อยู่",
+  "Bio": "ประวัติส่วนตัว",
+  "Default post visibility": "การตั้งค่าผู้ชมโพสต์เริ่มต้น",
+  "Private": "ส่วนตัว",
+  "Community": "ชุมชน",
+  "Only me": "เฉพาะฉัน",
+  "Email": "อีเมล",
+  "Save profile": "บันทึกโปรไฟล์",
+  "Days cared": "วันที่ดูแลต้นฝ้าย",
+  "+100 points": "+100 คะแนน",
+  "+1 buying credit": "+1 สิทธิ์ซื้อเสื้อผ้า",
+  "Kill plant": "ทำให้ต้นฝ้ายเหี่ยวเฉา",
+  "Reset today’s water + post bonus": "รีเซ็ตการรดน้ำและโบนัสโพสต์วันนี้",
+  "Reset plant, points, credits": "รีเซ็ตต้นฝ้าย คะแนน และสิทธิ์ซื้อ",
+};
+const localizedLabel = (lang: Lang, english: string) => lang === "th" ? thaiLabels[english] ?? english : english;
+const localizedTags = (lang: Lang, tags: string) => tags.split(" · ").map((tag) => localizedLabel(lang, tag)).join(" · ");
 
 const thaiGarmentNames: Record<string, string> = {
   "Cloud linen shirt": "เสื้อลินินสีงาช้าง",
@@ -99,7 +302,7 @@ function isFirestorePermissionDenied(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error && error.code === "permission-denied";
 }
 
-function useCommunityInbox(userId: string) {
+function useCommunityInbox(userId: string, lang: Lang) {
   const [friends, setFriends] = useState<CommunityFriend[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<CommunityFriendRequest[]>([]);
   const [unreadByChat, setUnreadByChat] = useState<Record<string, CommunityMessage[]>>({});
@@ -120,31 +323,31 @@ function useCommunityInbox(userId: string) {
         }));
       }, (messageError) => {
         console.error("Could not load unread community messages", messageError);
-        setMessagesError("Could not load messages. Check your Firestore chat rules.");
+        setMessagesError(lang === "th" ? "โหลดข้อความไม่สำเร็จ โปรดตรวจสอบกฎแชตของ Firestore" : "Could not load messages. Check your Firestore chat rules.");
       }));
       setMessagesError("");
       setFriendsError("");
     }, (friendError) => {
       console.error("Could not load community friends", friendError);
-      setFriendsError("Could not load friends. Check your Firestore friendship rules.");
+      setFriendsError(lang === "th" ? "โหลดรายชื่อเพื่อนไม่สำเร็จ โปรดตรวจสอบกฎเพื่อนของ Firestore" : "Could not load friends. Check your Firestore friendship rules.");
     });
     const stopRequests = subscribeIncomingCommunityFriendRequests(userId, (requests) => {
       setIncomingRequests(requests);
       setRequestsError("");
     }, (requestError) => {
       console.error("Could not load incoming community friend requests", requestError);
-      setRequestsError("Could not load friend requests. Check your Firestore friend-request rules.");
+      setRequestsError(lang === "th" ? "โหลดคำขอเป็นเพื่อนไม่สำเร็จ โปรดตรวจสอบกฎคำขอเป็นเพื่อนของ Firestore" : "Could not load friend requests. Check your Firestore friend-request rules.");
     });
     return () => {
       stopFriends();
       stopRequests();
       messageStops.forEach((stop) => stop());
     };
-  }, [userId]);
+  }, [lang, userId]);
   return { friends, incomingRequests, unreadByChat, error: [friendsError, requestsError, messagesError].filter(Boolean).join(" ") };
 }
 
-function useFriendActivityNotifications(friends: CommunityFriend[], preferences: NotificationPreferences) {
+function useFriendActivityNotifications(friends: CommunityFriend[], preferences: NotificationPreferences, lang: Lang) {
   const [activities, setActivities] = useState<FriendActivityNotification[]>([]);
   const [error, setError] = useState("");
   const friendIds = friends.map((friend) => friend.uid).sort().join("|");
@@ -186,7 +389,7 @@ function useFriendActivityNotifications(friends: CommunityFriend[], preferences:
         setError("");
       }, (loadError) => {
         console.error("Could not load friend post notifications", loadError);
-        setError("Could not load friend post notifications. Check your Firestore community post rules.");
+        setError(lang === "th" ? "โหลดการแจ้งเตือนโพสต์ของเพื่อนไม่สำเร็จ โปรดตรวจสอบกฎโพสต์ชุมชนของ Firestore" : "Could not load friend post notifications. Check your Firestore community post rules.");
       }));
     }
     if (preferences.friendListings) {
@@ -206,11 +409,11 @@ function useFriendActivityNotifications(friends: CommunityFriend[], preferences:
         setError("");
       }, (loadError) => {
         console.error("Could not load friend listing notifications", loadError);
-        setError("Could not load friend listing notifications. Check your Firestore marketplace rules.");
+        setError(lang === "th" ? "โหลดการแจ้งเตือนรายการขายของเพื่อนไม่สำเร็จ โปรดตรวจสอบกฎตลาดซื้อขายของ Firestore" : "Could not load friend listing notifications. Check your Firestore marketplace rules.");
       }));
     }
     return () => stops.forEach((stop) => stop());
-  }, [friendIds, friendNameKey, preferences.friendPosts, preferences.friendListings]);
+  }, [friendIds, friendNameKey, lang, preferences.friendPosts, preferences.friendListings]);
 
   return { activities, error };
 }
@@ -238,11 +441,12 @@ function useMarketplaceListings(lang: Lang) {
 }
 
 function TagDropdown({ label, emptyLabel, options, selected, onChange }: { label: string; emptyLabel: string; options: string[]; selected: string[]; onChange: (tags: string[]) => void }) {
+  const { lang } = useLanguage();
   return (
     <details className="tag-dropdown">
-      <summary><Tag size={15} /><span>{label}</span><small>{selected.length ? selected.join(", ") : emptyLabel}</small><ChevronDown size={15} /></summary>
+      <summary><Tag size={15} /><span>{label}</span><small>{selected.length ? selected.map((item) => localizedLabel(lang, item)).join(", ") : emptyLabel}</small><ChevronDown size={15} /></summary>
       <div className="tag-dropdown-options">
-        {options.map((option) => <label key={option}><input type="checkbox" checked={selected.includes(option)} onChange={() => onChange(selected.includes(option) ? selected.filter((tag) => tag !== option) : [...selected, option])} />{option}</label>)}
+        {options.map((option) => <label key={option}><input type="checkbox" checked={selected.includes(option)} onChange={() => onChange(selected.includes(option) ? selected.filter((tag) => tag !== option) : [...selected, option])} />{localizedLabel(lang, option)}</label>)}
       </div>
     </details>
   );
@@ -390,8 +594,9 @@ function journeyProgress(caredDays: number): number {
 }
 
 function PlantArtwork({ stage, alive }: { stage: number; alive: boolean }) {
+  const { lang } = useLanguage();
   return (
-    <div className="plant-art" aria-label={`Replaceable artwork placeholder for cotton stage ${stage}`}>
+    <div className="plant-art" aria-label={lang === "th" ? `ภาพประกอบระยะที่ ${stage} ของต้นฝ้าย` : `Cotton plant stage ${stage} illustration`}>
       <div className="sun-orbit" />
       <div className="leaf leaf-left" />
       <div className="leaf leaf-right" />
@@ -400,7 +605,7 @@ function PlantArtwork({ stage, alive }: { stage: number; alive: boolean }) {
       <div className="cotton cotton-two" />
       <div className="cotton cotton-three" />
       <div className="soil" />
-      <span className="art-note">{alive ? `Your stage ${stage} illustration` : "Your withered-plant illustration"}</span>
+      <span className="art-note">{lang === "th" ? alive ? `ต้นฝ้ายระยะที่ ${stage}` : "ภาพประกอบต้นฝ้ายที่เหี่ยวเฉา" : alive ? `Your stage ${stage} illustration` : "Your withered-plant illustration"}</span>
     </div>
   );
 }
@@ -424,7 +629,7 @@ function Header({
   notificationCount: number;
   dark: boolean;
 }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   return (
     <header className="topbar">
       <div>
@@ -432,17 +637,17 @@ function Header({
         <h1>{title}</h1>
       </div>
       <div className="top-actions" data-tour="top-actions">
-        <button className="language-button" onClick={onLanguage} aria-label="Change language">
+        <button className="language-button" onClick={onLanguage} aria-label={localizedLabel(lang, "Change language")}>
           <Globe2 size={17} /> {t.language}
         </button>
-        <button className="icon-button" onClick={onTheme} aria-label="Toggle color theme">
+        <button className="icon-button" onClick={onTheme} aria-label={localizedLabel(lang, "Toggle color theme")}>
           {dark ? <Sun size={19} /> : <Moon size={19} />}
         </button>
-        <button className="icon-button" onClick={onChat} aria-label="Open messages">
+        <button className="icon-button" onClick={onChat} aria-label={localizedLabel(lang, "Open messages")}>
           <MessageCircle size={18} />
           <span />
         </button>
-        <button className="avatar-button" onClick={onNotifications} aria-label={`Open notifications${notificationCount ? `, ${notificationCount} items` : ""}`}>
+        <button className="avatar-button" onClick={onNotifications} aria-label={lang === "th" ? `เปิดการแจ้งเตือน${notificationCount ? ` ${notificationCount} รายการ` : ""}` : `Open notifications${notificationCount ? `, ${notificationCount} items` : ""}`}>
           <Bell size={18} />
           {notificationCount > 0 && <span className="notification-count">{notificationCount > 9 ? "9+" : notificationCount}</span>}
         </button>
@@ -461,6 +666,7 @@ function PlantView({
   onReplant: () => void;
 }) {
   const { lang } = useLanguage();
+  const th = lang === "th";
   const watered = state.wateredOn === TODAY;
   const { caredDays, alive } = state.plant;
   const stage = plantStage(caredDays);
@@ -485,15 +691,15 @@ function PlantView({
           <div className="hero-stats" data-tour="plant-stats">
             <div>
               <strong>{state.plant.streak}</strong>
-              <span>day streak</span>
+              <span>{localizedLabel(lang, "day streak")}</span>
             </div>
             <div>
               <strong>{state.profile.buyingCredits}</strong>
-              <span>buying credit</span>
+              <span>{localizedLabel(lang, "buying credit")}</span>
             </div>
             <div>
               <strong>{String(daysLeft).padStart(2, "0")}</strong>
-              <span>days to full</span>
+              <span>{localizedLabel(lang, "days to full")}</span>
             </div>
           </div>
         </div>
@@ -506,9 +712,9 @@ function PlantView({
             {watered ? <Check size={24} /> : <Droplets size={24} />}
           </div>
           <div>
-            <span className="card-kicker">{!alive ? "Your cotton needs a fresh start" : watered ? "Today’s care is complete" : "Your cotton is ready"}</span>
-            <h3>{!alive ? "Time to replant" : watered ? "Watered and thriving" : "A little water goes far"}</h3>
-            <p>{!alive ? "Your points and closet are safe." : watered ? "Come back tomorrow to continue your streak." : "Water once today before midnight."}</p>
+            <span className="card-kicker">{localizedLabel(lang, !alive ? "Your cotton needs a fresh start" : watered ? "Today’s care is complete" : "Your cotton is ready")}</span>
+            <h3>{localizedLabel(lang, !alive ? "Time to replant" : watered ? "Watered and thriving" : "A little water goes far")}</h3>
+            <p>{localizedLabel(lang, !alive ? "Your points and closet are safe." : watered ? "Come back tomorrow to continue your streak." : "Water once today before midnight.")}</p>
           </div>
         </div>
         {alive ? (
@@ -527,18 +733,18 @@ function PlantView({
       <section className="progress-section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">Growth journey</span>
-            <h3>From seed to soft cotton</h3>
+            <span className="eyebrow">{localizedLabel(lang, "Growth journey")}</span>
+            <h3>{localizedLabel(lang, "From seed to soft cotton")}</h3>
           </div>
-          <span className="progress-count">{Math.min(caredDays, DAYS_TO_FULL)} / {DAYS_TO_FULL} days</span>
+          <span className="progress-count">{Math.min(caredDays, DAYS_TO_FULL)} / {DAYS_TO_FULL} {localizedLabel(lang, "days")}</span>
         </div>
         <div className="stage-track" data-tour="journey">
           <div className="track-line" style={{ left: "10%", right: "10%" }}><span style={{ width: `${alive ? journeyProgress(caredDays) * 100 : 0}%`, transition: "width .4s ease" }} /></div>
           {stageSteps.map((step, index) => (
             <div className={`stage ${alive && index < stage ? "active" : ""}`} key={step.label}>
               <div className="stage-dot">{alive && index < stage - 1 ? <Check size={13} /> : index + 1}</div>
-              <strong>{step.label}</strong>
-              <span>Days {step.range}</span>
+              <strong>{th ? ["ต้นอ่อน", "เติบโต", "ออกดอก", "ปุยฝ้าย", "เติบโตเต็มที่"][index] : step.label}</strong>
+              <span>{localizedLabel(lang, "Days")} {step.range}</span>
             </div>
           ))}
         </div>
@@ -547,8 +753,8 @@ function PlantView({
       <button className="fact-bar" data-tour="funfact" onClick={() => setFactOpen(true)}>
         <span className="fact-mark"><Leaf size={17} /></span>
         <span>
-          <small>Today’s thread</small>
-          The equivalent of one garbage truck of textiles is landfilled every second.
+          <small>{localizedLabel(lang, "Today’s thread")}</small>
+          {th ? "ทุกวินาทีมีสิ่งทอจำนวนเท่ารถขยะหนึ่งคันถูกนำไปฝังกลบ" : "The equivalent of one garbage truck of textiles is landfilled every second."}
         </span>
         <ArrowRight size={19} />
       </button>
@@ -556,18 +762,17 @@ function PlantView({
       {factOpen && (
         <div className="overlay" onClick={() => setFactOpen(false)}>
           <article className="sheet fact-sheet" onClick={(event) => event.stopPropagation()}>
-            <button className="close-button" onClick={() => setFactOpen(false)} aria-label="Close">
+            <button className="close-button" onClick={() => setFactOpen(false)} aria-label={localizedLabel(lang, "Close")}>
               <X size={20} />
             </button>
             <span className="fact-large-mark"><Leaf size={25} /></span>
-            <span className="eyebrow">Today’s thread · 02</span>
-            <h2>Small wardrobe choices have a long afterlife.</h2>
+            <span className="eyebrow">{localizedLabel(lang, "Today’s thread · 02")}</span>
+            <h2>{localizedLabel(lang, "Small wardrobe choices have a long afterlife.")}</h2>
             <p>
-              Extending the active life of clothing through care, repair, and reuse is one of the simplest ways to
-              reduce its environmental footprint.
+              {th ? "การดูแล ซ่อมแซม และนำเสื้อผ้ากลับมาใช้ซ้ำช่วยยืดอายุการใช้งาน และเป็นหนึ่งในวิธีง่าย ๆ ที่ช่วยลดผลกระทบต่อสิ่งแวดล้อม" : "Extending the active life of clothing through care, repair, and reuse is one of the simplest ways to reduce its environmental footprint."}
             </p>
             <a className="article-link" href="https://www.unep.org/news-and-stories/story/environmental-costs-fast-fashion" target="_blank" rel="noreferrer">
-              Read the UNEP story <ExternalLink size={16} />
+              {th ? "อ่านบทความจาก UNEP" : "Read the UNEP story"} <ExternalLink size={16} />
             </a>
           </article>
         </div>
@@ -602,7 +807,7 @@ function GarmentPhotoPicker({ image, placeholder, onResult, onBusy, onNote, comp
     <>
       <label className={compact ? "secondary-button" : "capture-box file-capture"} style={compact ? { display: "inline-flex", gap: 8, alignItems: "center", cursor: busy ? "wait" : "pointer" } : undefined}>
         <input type="file" accept="image/*" disabled={!!busy} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) handle(file); }} />
-        {compact ? <Upload size={16} /> : !placeholder ? <img src={image} alt="Garment preview" style={{ objectFit: "contain", background: "var(--sage-light)" }} /> : <Upload size={25} />}
+        {compact ? <Upload size={16} /> : !placeholder ? <img src={image} alt={lang === "th" ? "ตัวอย่างรูปเสื้อผ้า" : "Garment preview"} style={{ objectFit: "contain", background: "var(--sage-light)" }} /> : <Upload size={25} />}
         <span>{busy || (compact ? (lang === "th" ? "เปลี่ยนรูป" : "Change photo") : (lang === "th" ? "อัปโหลดรูปเสื้อผ้า" : "Upload garment"))}</span>
       </label>
     </>
@@ -619,7 +824,7 @@ function GarmentCard({ garment, listed, onClick, onDragStart, onDragEnd }: {
   const { lang } = useLanguage();
   const displayName = garmentName(garment, lang);
   return (
-    <div className="garment-card" role="button" tabIndex={0} draggable onClick={onClick} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onClick(); } }} onDragStart={onDragStart} onDragEnd={onDragEnd} aria-label={`Drag ${displayName} to move it, or click to view details`} title={`Drag to move ${displayName}; click for details`}>
+    <div className="garment-card" role="button" tabIndex={0} draggable onClick={onClick} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onClick(); } }} onDragStart={onDragStart} onDragEnd={onDragEnd} aria-label={lang === "th" ? `ลาก ${displayName} เพื่อย้าย หรือแตะเพื่อดูรายละเอียด` : `Drag ${displayName} to move it, or click to view details`} title={lang === "th" ? `ลากเพื่อย้าย ${displayName} · แตะเพื่อดูรายละเอียด` : `Drag to move ${displayName}; click for details`}>
       <span className="hanger-hook" />
       <img src={garment.image} alt={displayName} style={{ objectFit: "contain", background: "var(--sage-light)" }} />
       <span className="garment-info">
@@ -629,7 +834,7 @@ function GarmentCard({ garment, listed, onClick, onDragStart, onDragEnd }: {
           <small>{garment.material}</small>
         </span>
       </span>
-      <span className="garment-details-hint">{listed ? "In shop" : "Details"} <ArrowRight size={12} /></span>
+      <span className="garment-details-hint">{localizedLabel(lang, listed ? "In shop" : "Details")} <ArrowRight size={12} /></span>
     </div>
   );
 }
@@ -667,10 +872,10 @@ function GarmentDetailSheet({
   return (
     <div className="overlay" onClick={onClose}>
       <article className="sheet detail-sheet" onClick={(event) => event.stopPropagation()}>
-        <button className="close-button" onClick={onClose} aria-label="Close"><X size={20} /></button>
+        <button className="close-button" onClick={onClose} aria-label={localizedLabel(lang, "Close")}><X size={20} /></button>
         <div className="detail-image"><img src={editing ? draft.image : garment.image} alt={garmentName(garment, lang)} style={{ objectFit: "contain" }} /><span>{garment.wearCount || 0} {lang === "th" ? "ครั้งที่ใส่" : "wears"}</span></div>
         <div className="detail-content">
-          <span className="eyebrow">{garment.closet} closet</span>
+          <span className="eyebrow">{lang === "th" && garment.closet === DEFAULT_CLOSET ? "ตู้เสื้อผ้าหลัก" : `${garment.closet} ${lang === "th" ? "ตู้เสื้อผ้า" : "closet"}`}</span>
           {editing ? (
             <div className="detail-edit-grid">
               <div className="wide" style={{ display: "grid", gap: 6 }}>
@@ -679,7 +884,7 @@ function GarmentDetailSheet({
               </div>
               {fields.map(([key, label]) => (
                 <label key={key}>
-                  <span>{label}</span>
+                  <span>{localizedLabel(lang, label)}</span>
                   {key === "closet" ? (
                     <select value={closetOf(draft, closets)} onChange={(event) => setDraft({ ...draft, closet: event.target.value })}>{closets.map((name) => <option key={name}>{name}</option>)}</select>
                   ) : (
@@ -687,28 +892,34 @@ function GarmentDetailSheet({
                   )}
                 </label>
               ))}
-              <label className="wide"><span>Care notes</span><textarea value={draft.notes || ""} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} /></label>
+              <label className="wide"><span>{localizedLabel(lang, "Care notes")}</span><textarea value={draft.notes || ""} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} /></label>
             </div>
           ) : (
             <>
               <h2>{garmentName(garment, lang)}</h2>
               <p>{lang === "th" ? "เสื้อผ้าชิ้นโปรดที่พร้อมกลับมาใส่ซ้ำได้เสมอ" : (garment.notes || "A loved part of your circular wardrobe.")}</p>
               <div className="detail-facts">
-                {fields.slice(1).map(([key, label]) => <span key={key}><small>{label}</small><strong>{String(garment[key] || "Not set")}</strong></span>)}
+                {fields.slice(1).map(([key, label]) => {
+                  const value = String(garment[key] || (lang === "th" ? "ยังไม่ได้ระบุ" : "Not set"));
+                  const displayValue = key === "type" || key === "color" || key === "style" || key === "occasion"
+                    ? localizedLabel(lang, value)
+                    : value;
+                  return <span key={key}><small>{localizedLabel(lang, label)}</small><strong>{displayValue}</strong></span>;
+                })}
               </div>
             </>
           )}
           <div className="detail-actions">
-            <button className="danger-button" onClick={onDelete}><Trash2 size={17} /> Delete</button>
+            <button className="danger-button" onClick={onDelete}><Trash2 size={17} /> {localizedLabel(lang, "Delete")}</button>
             {editing ? (
-              <button className="primary-button" onClick={async () => { await onSave(draft); setEditing(false); }}><Check size={17} /> Save changes</button>
+              <button className="primary-button" onClick={async () => { await onSave(draft); setEditing(false); }}><Check size={17} /> {localizedLabel(lang, "Save changes")}</button>
             ) : (
               <>
                 <button className="secondary-button" disabled={Boolean(garment.marketplaceListingId)} onClick={onListForSale}>
                   {garment.marketplaceListingId ? <Check size={17} /> : <Store size={17} />}
-                  {garment.marketplaceListingId ? "In shop" : "Sell in shop"}
+                  {localizedLabel(lang, garment.marketplaceListingId ? "In shop" : "Sell in shop")}
                 </button>
-                <button className="primary-button" onClick={() => setEditing(true)}><Pencil size={17} /> Edit piece</button>
+                <button className="primary-button" onClick={() => setEditing(true)}><Pencil size={17} /> {localizedLabel(lang, "Edit piece")}</button>
               </>
             )}
           </div>
@@ -778,7 +989,7 @@ function AddGarmentSheet({
             <span className="eyebrow">{lang === "th" ? "เสื้อผ้าชิ้นใหม่" : "New wardrobe piece"}</span>
             <h2>{lang === "th" ? "เพิ่มลงตู้เสื้อผ้า" : "Add to your closet"}</h2>
           </div>
-          <button className="close-button" onClick={onClose} aria-label="Close">
+          <button className="close-button" onClick={onClose} aria-label={localizedLabel(lang, "Close")}>
             <X size={20} />
           </button>
         </div>
@@ -800,7 +1011,7 @@ function AddGarmentSheet({
           <label>
             <span>{lang === "th" ? "ประเภท" : "Clothing type"}</span>
             <select value={draft.type} onChange={(event) => update("type", event.target.value)}>
-              {["Shirt", "T-shirt", "Blouse", "Sweater", "Hoodie", "Jacket", "Coat", "Dress", "Skirt", "Pants", "Jeans", "Shorts", "Other"].map((type) => <option key={type}>{type}</option>)}
+              {["Shirt", "T-shirt", "Blouse", "Sweater", "Hoodie", "Jacket", "Coat", "Dress", "Skirt", "Pants", "Jeans", "Shorts", "Other"].map((type) => <option key={type} value={type}>{localizedLabel(lang, type)}</option>)}
             </select>
           </label>
           <label>
@@ -809,7 +1020,7 @@ function AddGarmentSheet({
           </label>
           <label>
             <span>{lang === "th" ? "ส่วนประกอบ" : "Composition"}</span>
-            <input value={draft.components} onChange={(event) => { update("components", event.target.value); update("material", event.target.value); }} placeholder="e.g. 100% cotton" />
+            <input value={draft.components} onChange={(event) => { update("components", event.target.value); update("material", event.target.value); }} placeholder={lang === "th" ? "เช่น ฝ้าย 100%" : "e.g. 100% cotton"} />
           </label>
           <label>
             <span>{lang === "th" ? "สี" : "Color"}</span>
@@ -817,15 +1028,15 @@ function AddGarmentSheet({
           </label>
           <label>
             <span>{lang === "th" ? "สไตล์" : "Style"}</span>
-            <select value={draft.style} onChange={(event) => update("style", event.target.value)}>{["Minimal", "Street", "Classic", "Casual", "Vintage", "Sporty", "Bohemian"].map((style) => <option key={style}>{style}</option>)}</select>
+            <select value={draft.style} onChange={(event) => update("style", event.target.value)}>{["Minimal", "Street", "Classic", "Casual", "Vintage", "Sporty", "Bohemian"].map((style) => <option key={style} value={style}>{localizedLabel(lang, style)}</option>)}</select>
           </label>
           <label>
             <span>{lang === "th" ? "โอกาส" : "Occasion"}</span>
-            <select value={draft.occasion} onChange={(event) => update("occasion", event.target.value)}>{["Everyday", "Casual", "Formal", "Work", "Party", "Sport"].map((occasion) => <option key={occasion}>{occasion}</option>)}</select>
+            <select value={draft.occasion} onChange={(event) => update("occasion", event.target.value)}>{["Everyday", "Casual", "Formal", "Work", "Party", "Sport"].map((occasion) => <option key={occasion} value={occasion}>{localizedLabel(lang, occasion)}</option>)}</select>
           </label>
           <label>
             <span>{lang === "th" ? "ตู้เสื้อผ้า" : "Closet"}</span>
-            <select value={draft.closet} onChange={(event) => update("closet", event.target.value)}>{closets.map((name) => <option key={name}>{name}</option>)}</select>
+            <select value={draft.closet} onChange={(event) => update("closet", event.target.value)}>{closets.map((name) => <option key={name} value={name}>{name === DEFAULT_CLOSET ? localizedLabel(lang, name) : name}</option>)}</select>
           </label>
         </div>
         <button
@@ -833,7 +1044,7 @@ function AddGarmentSheet({
           disabled={!draft.name.trim() || draft.image === photos.linen || photoBusy || scanning}
           onClick={() => onAdd({ ...draft, id: Date.now(), name: draft.name.trim() })}
         >
-          <Plus size={18} /> {lang === "th" ? `เพิ่มลง ${draft.closet}` : `Add to ${draft.closet}`}
+          <Plus size={18} /> {lang === "th" ? `เพิ่มลง${draft.closet === DEFAULT_CLOSET ? "ตู้เสื้อผ้าหลัก" : ` ${draft.closet}`}` : `Add to ${draft.closet}`}
         </button>
         {draft.image === photos.linen && <small style={{ color: "var(--ink-soft)", textAlign: "center" }}>{lang === "th" ? "อัปโหลดรูปเสื้อผ้าและตั้งชื่อเพื่อเพิ่ม" : "Upload a photo and give it a name to add it."}</small>}
       </article>
@@ -861,9 +1072,9 @@ function ClosetFilterSheet({
       <article className="sheet filter-sheet" onClick={(event) => event.stopPropagation()}>
         <div className="sheet-header"><div><span className="eyebrow">{lang === "th" ? "ค้นหาให้เร็วขึ้น" : "Narrow your closet"}</span><h2>{lang === "th" ? "ตัวกรองเสื้อผ้า" : "Filter pieces"}</h2></div><button className="close-button" onClick={onClose}><X size={20} /></button></div>
         <div className="filter-options">
-          <label><span>{lang === "th" ? "ประเภท" : "Type"}</span><select value={filters.type} onChange={(event) => setFilters({ ...filters, type: event.target.value })}><option value="">{lang === "th" ? "ทุกประเภท" : "All types"}</option>{types.map((type) => <option key={type}>{type}</option>)}</select></label>
-          <label><span>{lang === "th" ? "ตู้เสื้อผ้า" : "Closet"}</span><select value={filters.closet} onChange={(event) => setFilters({ ...filters, closet: event.target.value })}><option value="">{lang === "th" ? "ทุกตู้" : "All closets"}</option>{closets.map((name) => <option key={name}>{name}</option>)}</select></label>
-          <label><span>{lang === "th" ? "สี" : "Color"}</span><select value={filters.color} onChange={(event) => setFilters({ ...filters, color: event.target.value })}><option value="">{lang === "th" ? "ทุกสี" : "All colors"}</option>{colors.map((color) => <option key={color}>{color}</option>)}</select></label>
+          <label><span>{lang === "th" ? "ประเภท" : "Type"}</span><select value={filters.type} onChange={(event) => setFilters({ ...filters, type: event.target.value })}><option value="">{lang === "th" ? "ทุกประเภท" : "All types"}</option>{types.map((type) => <option key={type} value={type}>{localizedLabel(lang, type)}</option>)}</select></label>
+          <label><span>{lang === "th" ? "ตู้เสื้อผ้า" : "Closet"}</span>                    <select value={filters.closet} onChange={(event) => setFilters({ ...filters, closet: event.target.value })}><option value="">{lang === "th" ? "ทุกตู้" : "All closets"}</option>{closets.map((name) => <option key={name} value={name}>{name === DEFAULT_CLOSET && lang === "th" ? "ตู้เสื้อผ้าหลัก" : name}</option>)}</select></label>
+          <label><span>{lang === "th" ? "สี" : "Color"}</span><select value={filters.color} onChange={(event) => setFilters({ ...filters, color: event.target.value })}><option value="">{lang === "th" ? "ทุกสี" : "All colors"}</option>{colors.map((color) => <option key={color} value={color}>{localizedLabel(lang, color)}</option>)}</select></label>
         </div>
         <div className="filter-actions"><button className="secondary-button" onClick={() => setFilters({ type: "", closet: "", color: "" })}>{lang === "th" ? "ล้างทั้งหมด" : "Clear all"}</button><button className="primary-button" onClick={() => { onApply(filters); onClose(); }}><SlidersHorizontal size={17} /> {lang === "th" ? "ใช้ตัวกรอง" : "Apply filters"}</button></div>
       </article>
@@ -949,9 +1160,9 @@ function WardrobeView({
         <button className="primary-button add-button" data-tour="add-piece" onClick={onAdd}><Plus size={18} /> {t.addPiece}</button>
       </div>
       <div className="closet-summary">
-        <span><strong>{garments.length}</strong> pieces</span>
-        <span><strong>{closets.length}</strong> closets</span>
-        <span><strong>{naturalShare === null ? "–" : `${naturalShare}%`}</strong> natural fibers</span>
+        <span><strong>{garments.length}</strong> {localizedLabel(lang, "pieces")}</span>
+        <span><strong>{closets.length}</strong> {localizedLabel(lang, "closets")}</span>
+        <span><strong>{naturalShare === null ? "–" : `${naturalShare}%`}</strong> {localizedLabel(lang, "natural fibers")}</span>
         <button className="secondary-button" data-tour="new-closet" onClick={() => setNaming(true)} style={{ marginLeft: "auto" }}><FolderPlus size={16} /> {lang === "th" ? "ตู้ใหม่" : "New closet"}</button>
       </div>
       {closets.map((closet) => {
@@ -962,16 +1173,16 @@ function WardrobeView({
           <section className="wardrobe-unit" key={closet}>
             <div className="wardrobe-top" data-tour={closet === closets[0] ? "closet-shelf" : undefined}>
               <div>
-                <span className="eyebrow">{closet === DEFAULT_CLOSET ? (lang === "th" ? "ตู้หลัก" : "Default closet") : "Your collection"}</span>
-                <h3>{closet}</h3>
+                <span className="eyebrow">{closet === DEFAULT_CLOSET ? (lang === "th" ? "ตู้หลัก" : "Default closet") : localizedLabel(lang, "Your collection")}</span>
+                    <h3>{closet === DEFAULT_CLOSET && lang === "th" ? "ตู้เสื้อผ้าหลัก" : closet}</h3>
               </div>
               <span className="closet-hint" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {lang === "th" ? "ลากเสื้อผ้าเพื่อย้าย · แตะเพื่อดูรายละเอียด" : "Drag pieces to move · Tap for details"}
+                {localizedLabel(lang, "Drag pieces to move · Tap for details")}
                 {closet !== DEFAULT_CLOSET && (
                   <button
                     className="secondary-button"
-                    aria-label={`Delete ${closet}`}
-                    title={lang === "th" ? "ลบตู้นี้" : "Delete closet"}
+                    aria-label={lang === "th" ? `ลบตู้ ${closet}` : `Delete ${closet}`}
+                    title={localizedLabel(lang, "Delete closet")}
                     onClick={() => {
                       const message = lang === "th"
                         ? `ลบตู้ "${closet}" ? เสื้อผ้า ${movedCount} ชิ้นจะย้ายไปที่ "${DEFAULT_CLOSET}"`
@@ -1019,7 +1230,7 @@ function WardrobeView({
                   window.setTimeout(() => { didDrag.current = false; }, 200);
                 }}
               />) : (
-                <button className="empty-closet" onClick={onAdd}><Plus size={22} /><span>Add your first piece</span></button>
+                <button className="empty-closet" onClick={onAdd}><Plus size={22} /><span>{localizedLabel(lang, "Add your first piece")}</span></button>
               )}
             </div>
           </section>
@@ -1070,8 +1281,8 @@ function ReferenceStyleSheet({ onClose, onMatch }: { onClose: () => void; onMatc
     <div className="overlay" onClick={onClose}>
       <article className="sheet reference-sheet" onClick={(event) => event.stopPropagation()}>
         <div className="sheet-header"><div><span className="eyebrow">{lang === "th" ? "แรงบันดาลใจของคุณ" : "Your inspiration"}</span><h2>{lang === "th" ? "เพิ่มรูปอ้างอิง" : "Add a reference"}</h2></div><button className="close-button" onClick={onClose}><X size={20} /></button></div>
-        <label className="reference-upload"><input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => setImage(String(reader.result)); reader.readAsDataURL(file); }} />{image ? <img src={image} alt="Style reference" /> : <div className="reference-upload-placeholder"><Upload size={22} /><span>{lang === "th" ? "อัปโหลดรูปอ้างอิง" : "Upload a reference photo"}</span></div>}<span><Upload size={17} /> {lang === "th" ? "อัปโหลดรูปอ้างอิง" : "Upload reference photo"}</span></label>
-        <div className="reference-styles"><span>{lang === "th" ? "สไตล์ที่ต้องการ" : "Style direction"}</span><div>{["Minimal", "Street", "Classic", "Formal"].map((item) => <button className={style === item ? "active" : ""} onClick={() => setStyle(item)} key={item}>{item}</button>)}</div></div>
+        <label className="reference-upload"><input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => setImage(String(reader.result)); reader.readAsDataURL(file); }} />{image ? <img src={image} alt={lang === "th" ? "รูปอ้างอิงสไตล์" : "Style reference"} /> : <div className="reference-upload-placeholder"><Upload size={22} /><span>{lang === "th" ? "อัปโหลดรูปอ้างอิง" : "Upload a reference photo"}</span></div>}<span><Upload size={17} /> {lang === "th" ? "อัปโหลดรูปอ้างอิง" : "Upload reference photo"}</span></label>
+        <div className="reference-styles"><span>{lang === "th" ? "สไตล์ที่ต้องการ" : "Style direction"}</span><div>{["Minimal", "Street", "Classic", "Formal"].map((item) => <button className={style === item ? "active" : ""} onClick={() => setStyle(item)} key={item}>{localizedLabel(lang, item)}</button>)}</div></div>
         <button className="primary-button full" onClick={() => { onMatch(); onClose(); }}><WandSparkles size={18} /> {lang === "th" ? "ค้นหาชุดจากตู้ของฉัน" : "Match from my closet"}</button>
       </article>
     </div>
@@ -1105,40 +1316,40 @@ function MatchView({ garments, userId, currentMember, onPurchase, onDelete }: {
   return (
     <div className="match-layout">
       <section className="match-intro">
-        <span className="status-pill"><Sparkles size={15} /> Wardrobe-first styling</span>
-        <h2>Make more from<br />what you own.</h2>
-        <p>Build a look yourself, or add a reference and let Reweave find the closest match in your closet.</p>
+        <span className="status-pill"><Sparkles size={15} /> {lang === "th" ? "จัดสไตล์จากเสื้อผ้าที่มี" : "Wardrobe-first styling"}</span>
+        <h2>{localizedLabel(lang, "Make more from")}<br />{localizedLabel(lang, "what you own.")}</h2>
+        <p>{localizedLabel(lang, "Build a look yourself, or add a reference and let Reweave find the closest match in your closet.")}</p>
         <button className="primary-button" data-tour="lets-match" disabled={!garments.length} onClick={() => setGenerated(true)}>
-          <WandSparkles size={18} /> Let’s match
+          <WandSparkles size={18} /> {lang === "th" ? "จับคู่ชุด" : "Let’s match"}
         </button>
-        {!garments.length && <small style={{ color: "var(--ink-soft)" }}>Add a few pieces to your closet first.</small>}
+        {!garments.length && <small style={{ color: "var(--ink-soft)" }}>{localizedLabel(lang, "Add a few pieces to your closet first.")}</small>}
       </section>
       <section className="outfit-board">
         <div className="board-heading">
-          <div><span className="eyebrow">{generated ? "96% from your closet" : "Tap a piece to begin"}</span><h3>{generated ? "Soft city layers" : "New outfit"}</h3></div>
+          <div><span className="eyebrow">{localizedLabel(lang, generated ? "96% from your closet" : "Tap a piece to begin")}</span><h3>{localizedLabel(lang, generated ? "Soft city layers" : "New outfit")}</h3></div>
           <button className="icon-button"><MoreHorizontal size={20} /></button>
         </div>
         <div className="outfit-canvas">
           {(generated ? garments.slice(0, 3) : garments.slice(0, 2)).map((garment, index) => (
             <button className={`outfit-piece piece-${index + 1}`} key={garment.id}>
-              <img src={garment.image} alt={garment.name} />
+              <img src={garment.image} alt={garmentName(garment, lang)} />
               <span>{garment.name}</span>
             </button>
           ))}
-          {!generated && <button className="add-outfit-piece"><Plus size={21} /><span>Add layer</span></button>}
+          {!generated && <button className="add-outfit-piece"><Plus size={21} /><span>{localizedLabel(lang, "Add layer")}</span></button>}
         </div>
         <div className="board-actions">
-          <button className="secondary-button" onClick={() => setReferenceOpen(true)}><Upload size={17} /> Add reference</button>
+          <button className="secondary-button" onClick={() => setReferenceOpen(true)}><Upload size={17} /> {localizedLabel(lang, "Add reference")}</button>
           <button className="primary-button" onClick={() => setSaved(true)}>
             {saved ? <Check size={17} /> : <Heart size={17} />}
-            {saved ? "Saved" : "Save look"}
+            {localizedLabel(lang, saved ? "Saved" : "Save look")}
           </button>
         </div>
       </section>
       {generated && <section className="match-market-results">
         <div><span className="eyebrow">{lang === "th" ? "จับคู่จากร้านสมาชิก" : "Member shop matches"}</span><h3>{lang === "th" ? "เสื้อผ้ามือสองที่เข้ากับตู้ของคุณ" : "Secondhand pieces that fit your wardrobe"}</h3></div>
         {!matchedListings.length && <p>{lang === "th" ? "ยังไม่พบรายการที่ตรงกับเสื้อผ้าในตู้ของคุณ" : "No member listings match the pieces in your closet yet."}</p>}
-        <div className="match-listings">{matchedListings.map((listing) => <button className="match-listing" key={listing.id} onClick={() => setSelectedListing(listing)}><img src={listing.image} alt="" /><span><strong>{listing.name}</strong><small>{listing.style} · {listing.tags.join(" · ")}</small><b>฿{listing.price.toLocaleString()}</b></span><ArrowRight size={18} /></button>)}</div>
+        <div className="match-listings">{matchedListings.map((listing) => <button className="match-listing" key={listing.id} onClick={() => setSelectedListing(listing)}><img src={listing.image} alt="" /><span><strong>{listing.name}</strong><small>{localizedLabel(lang, listing.style)} · {listing.tags.map((tag) => localizedLabel(lang, tag)).join(" · ")}</small><b>฿{listing.price.toLocaleString()}</b></span><ArrowRight size={18} /></button>)}</div>
       </section>}
       {referenceOpen && <ReferenceStyleSheet onClose={() => setReferenceOpen(false)} onMatch={() => setGenerated(true)} />}
       {selectedListing && <ListingDetailSheet listing={selectedListing} userId={userId} currentMember={currentMember} onClose={() => setSelectedListing(null)} onPurchase={onPurchase} onDelete={onDelete} />}
@@ -1338,8 +1549,8 @@ function CommunityProfileSheet({ profileId, userId, currentMember, name, handle,
           {!listings.length && <p className="feed-empty">{lang === "th" ? "ไม่มีรายการกำลังขาย" : "No active listings."}</p>}
           {!!listings.length && <div className="profile-listing-grid">{listings.map((listing) => <article className="profile-listing-card" key={listing.id}>
             <img src={listing.image} alt={listing.name} />
-            <div><small>{listing.type} · {listing.size} · {listing.style}</small><strong>{listing.name}</strong><b>฿{listing.price.toLocaleString()}</b>
-              <div className="listing-tags">{listing.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+            <div><small>{localizedLabel(lang, listing.type)} · {localizedLabel(lang, listing.size)} · {localizedLabel(lang, listing.style)}</small><strong>{listing.name}</strong><b>฿{listing.price.toLocaleString()}</b>
+              <div className="listing-tags">{listing.tags.map((tag) => <span key={tag}>{localizedLabel(lang, tag)}</span>)}</div>
             </div>
           </article>)}</div>}
         </section>
@@ -1416,13 +1627,13 @@ function PostComposer({
             reader.onerror = () => setSaveError(lang === "th" ? "อ่านรูปภาพไม่สำเร็จ โปรดลองเลือกรูปอื่น" : "Could not read that photo. Please choose another.");
             reader.readAsDataURL(file);
           }} />
-          {draft.image ? <img src={draft.image} alt="Post preview" /> : <div className="post-photo-placeholder"><ImagePlus size={24} /><span>{lang === "th" ? "อัปโหลดรูปภาพ" : "Upload photos"}</span></div>}<span><ImagePlus size={18} /> {draft.image ? (lang === "th" ? "เปลี่ยนรูป" : "Change photo") : (lang === "th" ? "อัปโหลดรูปภาพ" : "Upload photos")}</span>
+          {draft.image ? <img src={draft.image} alt={lang === "th" ? "ตัวอย่างโพสต์" : "Post preview"} /> : <div className="post-photo-placeholder"><ImagePlus size={24} /><span>{lang === "th" ? "อัปโหลดรูปภาพ" : "Upload photos"}</span></div>}<span><ImagePlus size={18} /> {draft.image ? (lang === "th" ? "เปลี่ยนรูป" : "Change photo") : (lang === "th" ? "อัปโหลดรูปภาพ" : "Upload photos")}</span>
         </label>
         <div className="composer-fields">
           <input value={draft.look} onChange={(event) => setDraft({ ...draft, look: event.target.value })} placeholder={lang === "th" ? "ตั้งชื่อลุค" : "Name this look"} />
           <select aria-label={lang === "th" ? "สไตล์แฟชั่น" : "Fashion style"} value={draft.style || ""} onChange={(event) => setDraft({ ...draft, style: event.target.value })}>
             <option value="">{lang === "th" ? "เลือกสไตล์" : "Choose a style"}</option>
-            {FASHION_STYLES.map((style) => <option key={style}>{style}</option>)}
+            {FASHION_STYLES.map((style) => <option key={style} value={style}>{localizedLabel(lang, style)}</option>)}
           </select>
         </div>
         <div className="composer-tags"><TagDropdown label={lang === "th" ? "แท็กแฟชั่น" : "Fashion tags"} emptyLabel={lang === "th" ? "เลือกแท็ก" : "Choose tags"} options={FASHION_TAGS} selected={styleTags} onChange={setStyleTags} /></div>
@@ -1488,13 +1699,13 @@ function PostDetailSheet({
           <img src={post.image} alt={post.look} />
           <div className="post-detail-side">
             <div className="post-detail-user"><button onClick={onProfile} className="post-avatar">{post.avatar ? <img src={post.avatar} alt="" /> : post.name.slice(0, 1)}</button><button onClick={onProfile}><strong>{post.name}</strong><small>{post.handle}</small></button>{canEdit && <button className="icon-button" onClick={onEdit}><Pencil size={17} /></button>}<button className="close-button" onClick={onClose}><X size={19} /></button></div>
-            <div className="post-copy"><h2>{post.look}</h2><p>{post.caption}</p><span>{[post.style, post.tags].filter(Boolean).join(" · ")}</span></div>
+            <div className="post-copy"><h2>{post.look}</h2><p>{post.caption}</p><span>{[post.style ? localizedLabel(lang, post.style) : "", localizedTags(lang, post.tags)].filter(Boolean).join(" · ")}</span></div>
             <div className="post-tagged-pieces">
               <strong><Tag size={14} /> {lang === "th" ? "เสื้อผ้าในลุคนี้" : "Pieces in this look"}</strong>
               <div>{taggedGarments.length ? taggedGarments.map((garment) => <button type="button" key={garment.id} onClick={() => setSelectedTaggedGarment(garment)}>
                 {garment.image ? <img src={garment.image} alt={garmentName(garment, lang)} /> : <span className="tagged-piece-no-image"><Shirt size={20} /></span>}
                 <small>{garmentName(garment, lang)}</small>
-                <small>{[garment.type, garment.color, garment.material, garment.style].filter(Boolean).join(" · ")}</small>
+                <small>{[localizedLabel(lang, garment.type), localizedLabel(lang, garment.color), garment.material, localizedLabel(lang, garment.style || "")].filter(Boolean).join(" · ")}</small>
               </button>) : <p>{lang === "th" ? "ไม่ได้แท็กเสื้อผ้า" : "No clothing tagged."}</p>}</div>
             </div>
             <section className="comments" aria-label={lang === "th" ? "ความคิดเห็น" : "Comments"}>
@@ -1504,7 +1715,7 @@ function PostDetailSheet({
                 : <p className="comments-empty">{lang === "th" ? "ยังไม่มีความคิดเห็น เริ่มบทสนทนาได้เลย" : "No comments yet. Start the conversation."}</p>}
             </section>
             <div className="post-detail-actions">
-              <button className={`post-like-action ${isLiked ? "liked" : ""}`} aria-label={isLiked ? "Remove like" : "Like post"} disabled={liking} onClick={async () => {
+              <button className={`post-like-action ${isLiked ? "liked" : ""}`} aria-label={localizedLabel(lang, isLiked ? "Remove like" : "Like post")} disabled={liking} onClick={async () => {
                 setLiking(true);
                 setLikeError("");
                 try {
@@ -1530,11 +1741,11 @@ function PostDetailSheet({
             <span className="eyebrow">{lang === "th" ? "รายละเอียดเสื้อผ้าที่แท็ก" : "Tagged clothing details"}</span>
             <h2>{garmentName(selectedTaggedGarment, lang)}</h2>
             {[
-              [lang === "th" ? "ประเภท" : "Type", selectedTaggedGarment.type],
-              [lang === "th" ? "สี" : "Color", selectedTaggedGarment.color],
+              [lang === "th" ? "ประเภท" : "Type", localizedLabel(lang, selectedTaggedGarment.type)],
+              [lang === "th" ? "สี" : "Color", localizedLabel(lang, selectedTaggedGarment.color)],
               [lang === "th" ? "วัสดุ" : "Material", selectedTaggedGarment.components || selectedTaggedGarment.material],
-              [lang === "th" ? "สไตล์" : "Style", selectedTaggedGarment.style],
-              [lang === "th" ? "โอกาส" : "Occasion", selectedTaggedGarment.occasion],
+              [lang === "th" ? "สไตล์" : "Style", localizedLabel(lang, selectedTaggedGarment.style || "")],
+              [lang === "th" ? "โอกาส" : "Occasion", localizedLabel(lang, selectedTaggedGarment.occasion || "")],
               [lang === "th" ? "เจ้าของ" : "Owner", selectedTaggedGarment.owner],
             ].filter(([, value]) => value).map(([label, value]) => <p key={label}><strong>{label}</strong><span>{value}</span></p>)}
             {selectedTaggedGarment.notes && <p className="tagged-piece-notes"><strong>{lang === "th" ? "รายละเอียดเพิ่มเติม" : "More details"}</strong><span>{selectedTaggedGarment.notes}</span></p>}
@@ -1547,7 +1758,7 @@ function PostDetailSheet({
 
 function SendPostSheet({ post, userId, senderName, onClose, onSent }: { post: FashionPost; userId: string; senderName: string; onClose: () => void; onSent: (friend: CommunityFriend) => void }) {
   const { lang } = useLanguage();
-  const { friends, error: friendsError } = useCommunityInbox(userId);
+  const { friends, error: friendsError } = useCommunityInbox(userId, lang);
   const [sendingTo, setSendingTo] = useState("");
   const [error, setError] = useState("");
   const sendPost = async (friend: CommunityFriend) => {
@@ -1736,11 +1947,11 @@ function FeedView({ garments, profile, userId, bonusAvailable, onPosted, openNot
           </button>
           <div className="post-body">
             <div className="post-actions">
-              <button aria-label={isLiked ? "Remove like" : "Like post"} onClick={() => void toggleLike(post)}><Heart size={20} fill={isLiked ? "currentColor" : "none"} /></button>
+              <button aria-label={localizedLabel(lang, isLiked ? "Remove like" : "Like post")} onClick={() => void toggleLike(post)}><Heart size={20} fill={isLiked ? "currentColor" : "none"} /></button>
               <button aria-label={lang === "th" ? "ดูความคิดเห็น" : `View ${post.comments.length} comments`} onClick={() => setSelected(post)}><MessageCircle size={20} /></button>              <button aria-label={lang === "th" ? "แชร์โพสต์" : "Share post"} onClick={() => setSharingPost(post)}><Send size={20} /></button>
               <span>{post.likedBy?.length ?? post.likes} {lang === "th" ? "ถูกใจ" : "likes"} · {post.comments.length} {lang === "th" ? "ความคิดเห็น" : "comments"}</span>
             </div>
-            <button className="post-title" onClick={() => setSelected(post)}><h3>{post.look}</h3><p>{[post.style, post.tags].filter(Boolean).join(" · ")}</p></button>
+            <button className="post-title" onClick={() => setSelected(post)}><h3>{post.look}</h3><p>{[post.style ? localizedLabel(lang, post.style) : "", localizedTags(lang, post.tags)].filter(Boolean).join(" · ")}</p></button>
           </div>
         </article>
       )})}
@@ -1844,7 +2055,7 @@ function ListingComposer({ userId, profile, onClose, onSave, onUpdate, initial, 
             });
             event.target.value = "";
           }} />
-          {mainImage ? <img src={mainImage} alt="Listing preview" /> : <span><Upload size={22} /> {lang === "th" ? "อัปโหลดรูปเสื้อผ้า" : "Upload clothing photos"}</span>}
+          {mainImage ? <img src={mainImage} alt={lang === "th" ? "ตัวอย่างรูปเสื้อผ้าที่ลงขาย" : "Listing preview"} /> : <span><Upload size={22} /> {lang === "th" ? "อัปโหลดรูปเสื้อผ้า" : "Upload clothing photos"}</span>}
         </label>
         <div className="listing-photo-row">
           {images.map((photo, index) => <div className="listing-photo-thumb" key={`${index}-${photo.slice(-16)}`}><img src={photo} alt={`Listing photo ${index + 1}`} /><button type="button" aria-label={`Remove photo ${index + 1}`} onClick={() => setImages((current) => current.filter((_, photoIndex) => photoIndex !== index))}><X size={14} /></button></div>)}
@@ -1852,12 +2063,12 @@ function ListingComposer({ userId, profile, onClose, onSave, onUpdate, initial, 
         </div>
         <div className="listing-form">
           <label><span>{lang === "th" ? "ชื่อเสื้อผ้า" : "Item name"}</span><input value={name} onChange={(event) => setName(event.target.value)} /></label>
-          <label><span>{lang === "th" ? "ประเภท" : "Type"}</span><select value={type} onChange={(event) => setType(event.target.value)}><option value="">{lang === "th" ? "เลือกประเภท" : "Choose type"}</option>{type && !CLOTHING_TYPES.includes(type) && <option>{type}</option>}{CLOTHING_TYPES.map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label><span>{lang === "th" ? "ขนาด" : "Size"}</span><select value={size} onChange={(event) => setSize(event.target.value)}><option value="">{lang === "th" ? "เลือกขนาด" : "Choose size"}</option>{SIZES.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label><span>{lang === "th" ? "ประเภท" : "Type"}</span><select value={type} onChange={(event) => setType(event.target.value)}><option value="">{lang === "th" ? "เลือกประเภท" : "Choose type"}</option>{type && !CLOTHING_TYPES.includes(type) && <option value={type}>{localizedLabel(lang, type)}</option>}{CLOTHING_TYPES.map((item) => <option key={item} value={item}>{localizedLabel(lang, item)}</option>)}</select></label>
+          <label><span>{lang === "th" ? "ขนาด" : "Size"}</span><select value={size} onChange={(event) => setSize(event.target.value)}><option value="">{lang === "th" ? "เลือกขนาด" : "Choose size"}</option>{SIZES.map((item) => <option key={item} value={item}>{localizedLabel(lang, item)}</option>)}</select></label>
           <label><span>{lang === "th" ? "ราคา (บาท)" : "Price (THB)"}</span><input type="number" min="1" step="1" value={price} onChange={(event) => setPrice(event.target.value)} /></label>
           <label><span>{lang === "th" ? "วัสดุ" : "Material"}</span><input value={material} onChange={(event) => setMaterial(event.target.value)} /></label>
-          <label><span>{lang === "th" ? "สภาพ" : "Condition"}</span><select value={condition} onChange={(event) => setCondition(event.target.value)}><option value="">{lang === "th" ? "เลือกสภาพ" : "Choose condition"}</option>{["New with tags", "Like new", "Very good", "Good", "Well loved"].map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label><span>{lang === "th" ? "สไตล์" : "Style"}</span><select value={style} onChange={(event) => setStyle(event.target.value)}><option value="">{lang === "th" ? "เลือกสไตล์" : "Choose a style"}</option>{FASHION_STYLES.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label><span>{lang === "th" ? "สภาพ" : "Condition"}</span><select value={condition} onChange={(event) => setCondition(event.target.value)}><option value="">{lang === "th" ? "เลือกสภาพ" : "Choose condition"}</option>{["New with tags", "Like new", "Very good", "Good", "Well loved"].map((item) => <option key={item} value={item}>{localizedLabel(lang, item)}</option>)}</select></label>
+          <label><span>{lang === "th" ? "สไตล์" : "Style"}</span><select value={style} onChange={(event) => setStyle(event.target.value)}><option value="">{lang === "th" ? "เลือกสไตล์" : "Choose a style"}</option>{FASHION_STYLES.map((item) => <option key={item} value={item}>{localizedLabel(lang, item)}</option>)}</select></label>
           <label className="wide"><span>{lang === "th" ? "รายละเอียด" : "Description"}</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} /></label>
         </div>
         <TagDropdown label={lang === "th" ? "แท็กแฟชั่น" : "Fashion tags"} emptyLabel={lang === "th" ? "เลือกแท็ก" : "Choose tags"} options={FASHION_TAGS} selected={tags} onChange={setTags} />
@@ -1880,7 +2091,8 @@ function DemoQrCode() {
     const fixed = finder(0, 0) ?? finder(14, 0) ?? finder(0, 14);
     return fixed ?? ((x * 17 + y * 31 + x * y * 7) % 11 < 5);
   });
-  return <svg className="demo-qr" viewBox="0 0 21 21" role="img" aria-label="Mock QR code preview">{cells.map((dark, index) => dark && <rect key={index} x={index % 21} y={Math.floor(index / 21)} width="1" height="1" />)}</svg>;
+  const { lang } = useLanguage();
+  return <svg className="demo-qr" viewBox="0 0 21 21" role="img" aria-label={lang === "th" ? "ตัวอย่างคิวอาร์โค้ดจำลอง" : "Mock QR code preview"}>{cells.map((dark, index) => dark && <rect key={index} x={index % 21} y={Math.floor(index / 21)} width="1" height="1" />)}</svg>;
 }
 
 function ListingDetailSheet({ listing, userId, currentMember, onClose, onPurchase, onDelete, onEdit }: {
@@ -1923,14 +2135,14 @@ function ListingDetailSheet({ listing, userId, currentMember, onClose, onPurchas
     <>
       <div className="overlay" onClick={onClose}>
         <article className="sheet listing-detail-sheet" onClick={(event) => event.stopPropagation()}>
-          <button className="close-button" onClick={onClose} aria-label="Close"><X size={20} /></button>
+          <button className="close-button" onClick={onClose} aria-label={localizedLabel(lang, "Close")}><X size={20} /></button>
           <img src={photos[Math.min(photoIndex, photos.length - 1)] || listing.image} alt={listing.name} />
           <div className="listing-detail-content">
-            {photos.length > 1 && <div className="listing-detail-photos">{photos.map((photo, index) => <button type="button" key={`${index}-${photo.slice(-16)}`} className={index === photoIndex ? "active" : ""} onClick={() => setPhotoIndex(index)} aria-label={`View photo ${index + 1}`}><img src={photo} alt="" /></button>)}</div>}
-            <span className="eyebrow">{listing.condition} · {listing.type} · {listing.size}</span>
+            {photos.length > 1 && <div className="listing-detail-photos">{photos.map((photo, index) => <button type="button" key={`${index}-${photo.slice(-16)}`} className={index === photoIndex ? "active" : ""} onClick={() => setPhotoIndex(index)} aria-label={lang === "th" ? `ดูภาพที่ ${index + 1}` : `View photo ${index + 1}`}><img src={photo} alt="" /></button>)}</div>}
+            <span className="eyebrow">{localizedLabel(lang, listing.condition)} · {localizedLabel(lang, listing.type)} · {localizedLabel(lang, listing.size)}</span>
             <h2>{listing.name}</h2>
             <p>{listing.description || (lang === "th" ? "ผู้ขายยังไม่ได้เพิ่มรายละเอียด" : "No description provided.")}</p>
-            <div className="listing-tags"><span>{listing.style}</span>{listing.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+            <div className="listing-tags"><span>{localizedLabel(lang, listing.style)}</span>{listing.tags.map((tag) => <span key={tag}>{localizedLabel(lang, tag)}</span>)}</div>
             {listing.material && <p>{lang === "th" ? "วัสดุ" : "Material"}: {listing.material}</p>}
             <button className="seller-line" onClick={() => setSellerOpen(true)}><span className="post-avatar">{listing.sellerAvatar ? <img src={listing.sellerAvatar} alt="" /> : listing.seller.slice(0, 1)}</span><span><strong>{listing.seller}</strong><small>{listing.sellerHandle}</small></span><ArrowRight size={17} /></button>
             <div className="purchase-row">
@@ -1994,7 +2206,7 @@ function MarketView({ profile, userId, onPurchase, onDelete, onCreate, onUpdate,
   return (
     <div className="market-grid">
       <section className="market-hero">
-        <div><span className="eyebrow">Sustain-Second</span><h2>{lang === "th" ? <>เสื้อผ้าดี<br />เรื่องราวบทใหม่</> : <>Good pieces,<br />next chapters.</>}</h2><p>{lang === "th" ? "ซื้อและขายเสื้อผ้ามือสองระหว่างสมาชิก Reweave" : "Buy and sell pre-loved clothes directly with other Reweave members."}</p></div>
+        <div><span className="eyebrow">{lang === "th" ? "เสื้อผ้ามือสองเพื่อความยั่งยืน" : "Sustain-Second"}</span><h2>{lang === "th" ? <>เสื้อผ้าดี<br />เรื่องราวบทใหม่</> : <>Good pieces,<br />next chapters.</>}</h2><p>{lang === "th" ? "ซื้อและขายเสื้อผ้ามือสองระหว่างสมาชิก Reweave" : "Buy and sell pre-loved clothes directly with other Reweave members."}</p></div>
         <button className="primary-button sell-button" onClick={() => { setEditingListing(null); setComposerOpen(true); }}><Plus size={18} /> {lang === "th" ? "ลงขายเสื้อผ้า" : "Sell an item"}</button>
       </section>
       <label className="search-field marketplace-search"><Search size={18} /><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t.shopSearch} aria-label={t.shopSearch} /></label>
@@ -2006,8 +2218,8 @@ function MarketView({ profile, userId, onPurchase, onDelete, onCreate, onUpdate,
       {visibleListings.map((listing) => (
         <article className="listing-card" key={listing.id} role="button" tabIndex={0} onClick={() => setSelected(listing)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelected(listing); } }}>
           <img src={listing.image} alt={listing.name} />
-          <span className="listing-size">{listing.size}</span>
-          <div><small>{listing.seller} · {listing.style}</small><h3>{listing.name}</h3><strong>฿{listing.price.toLocaleString()}</strong><div className="listing-tags">{listing.tags.slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)}</div></div>
+          <span className="listing-size">{localizedLabel(lang, listing.size)}</span>
+          <div><small>{listing.seller} · {localizedLabel(lang, listing.style)}</small><h3>{listing.name}</h3><strong>฿{listing.price.toLocaleString()}</strong><div className="listing-tags">{listing.tags.slice(0, 3).map((tag) => <span key={tag}>{localizedLabel(lang, tag)}</span>)}</div></div>
           <span className="listing-open-icon" aria-hidden="true"><ArrowRight size={18} /></span>
         </article>
       ))}
@@ -2116,6 +2328,7 @@ function EditProfileSheet({
   onClose: () => void;
   onSave: (profile: Partial<Profile>) => Promise<void>;
 }) {
+  const { lang } = useLanguage();
   const [draft, setDraft] = useState(profile);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -2123,11 +2336,11 @@ function EditProfileSheet({
   return (
     <div className="overlay" onClick={onClose}>
       <article className="sheet edit-profile-sheet" onClick={(event) => event.stopPropagation()}>
-        <div className="sheet-header"><div><span className="eyebrow">Account details</span><h2>Edit profile</h2></div><button className="close-button" onClick={onClose}><X size={20} /></button></div>
+        <div className="sheet-header"><div><span className="eyebrow">{lang === "th" ? "รายละเอียดบัญชี" : "Account details"}</span><h2>{localizedLabel(lang, "Edit profile")}</h2></div><button className="close-button" onClick={onClose} aria-label={localizedLabel(lang, "Close")}><X size={20} /></button></div>
         <div className="avatar-editor">
           <div className="profile-avatar">{draft.avatar ? <img src={draft.avatar} alt="" /> : draft.displayName.split(" ").map((part) => part[0]).join("").slice(0, 2)}</div>
           <label className="secondary-button file-button">
-            {uploading ? <LoaderCircle className="spin" size={16} /> : <Camera size={16} />} {uploading ? "Uploading…" : "Change photo"}
+            {uploading ? <LoaderCircle className="spin" size={16} /> : <Camera size={16} />} {uploading ? (lang === "th" ? "กำลังอัปโหลด…" : "Uploading…") : (lang === "th" ? "เปลี่ยนรูป" : "Change photo")}
             <input
               type="file"
               accept="image/*"
@@ -2147,7 +2360,7 @@ function EditProfileSheet({
               }}
             />
           </label>
-          <small>JPG, PNG, or WebP up to 6 MB.</small>
+          <small>{lang === "th" ? "รองรับไฟล์ JPG, PNG หรือ WebP ขนาดไม่เกิน 6 MB" : "JPG, PNG, or WebP up to 6 MB."}</small>
         </div>
         <div className="form-grid">
           {[
@@ -2156,11 +2369,11 @@ function EditProfileSheet({
             ["age", "Age"],
             ["location", "Location"],
           ].map(([key, label]) => (
-            <label key={key}><span>{label}</span><input type={key === "age" ? "number" : "text"} value={String(draft[key as keyof Profile] ?? "")} onChange={(event) => setDraft({ ...draft, [key]: key === "age" ? Number(event.target.value) : event.target.value })} /></label>
+            <label key={key}><span>{localizedLabel(lang, label)}</span><input type={key === "age" ? "number" : "text"} value={String(draft[key as keyof Profile] ?? "")} onChange={(event) => setDraft({ ...draft, [key]: key === "age" ? Number(event.target.value) : event.target.value })} /></label>
           ))}
-          <label className="wide"><span>Bio</span><textarea value={draft.bio} onChange={(event) => setDraft({ ...draft, bio: event.target.value })} /></label>
-          <label><span>Default post visibility</span><select value={draft.privacy} onChange={(event) => setDraft({ ...draft, privacy: event.target.value })}><option value="private">Private</option><option value="public">Community</option></select></label>
-          <label><span>Email</span><input value={draft.email} disabled /></label>
+          <label className="wide"><span>{lang === "th" ? "ประวัติส่วนตัว" : "Bio"}</span><textarea value={draft.bio} onChange={(event) => setDraft({ ...draft, bio: event.target.value })} /></label>
+          <label><span>{localizedLabel(lang, "Default post visibility")}</span><select value={draft.privacy} onChange={(event) => setDraft({ ...draft, privacy: event.target.value })}><option value="private">{localizedLabel(lang, "Private")}</option><option value="public">{localizedLabel(lang, "Community")}</option></select></label>
+          <label><span>{localizedLabel(lang, "Email")}</span><input value={draft.email} disabled /></label>
         </div>
         {saveError && <p className="form-error" role="alert">{saveError}</p>}
         <button className="primary-button full" disabled={saving} onClick={async () => {
@@ -2171,11 +2384,11 @@ function EditProfileSheet({
             onClose();
           } catch (error) {
             console.error("Could not save profile changes", error);
-            setSaveError("Could not save your profile. Please try again.");
+            setSaveError(lang === "th" ? "บันทึกโปรไฟล์ไม่สำเร็จ โปรดลองอีกครั้ง" : "Could not save your profile. Please try again.");
           } finally {
             setSaving(false);
           }
-        }}>{saving ? <LoaderCircle className="spin" size={17} /> : <Check size={17} />} Save profile</button>
+        }}>{saving ? <LoaderCircle className="spin" size={17} /> : <Check size={17} />} {localizedLabel(lang, "Save profile")}</button>
       </article>
     </div>
   );
@@ -2230,11 +2443,11 @@ function NotificationSheet({ waterDue, activities, readActivityIds, error, onClo
       <article className="sheet notification-sheet" onClick={(event) => event.stopPropagation()}>
         <div className="sheet-header">
           <div><span className="eyebrow">{lang === "th" ? "อัปเดตจากชุมชน" : "Your updates"}</span><h2>{lang === "th" ? "การแจ้งเตือน" : "Notifications"}</h2></div>
-          <button className="close-button" onClick={onClose} aria-label="Close"><X size={20} /></button>
+          <button className="close-button" onClick={onClose} aria-label={localizedLabel(lang, "Close")}><X size={20} /></button>
         </div>
         {waterDue && <article className="notification-item water-notification">
           <span className="notification-icon"><Droplets size={19} /></span>
-          <div><strong>{lang === "th" ? "อย่าลืมรดน้ำต้นฝ้ายวันนี้" : "Your cotton needs water today"}</strong><small>{lang === "th" ? "รดน้ำวันนี้เพื่อดูแลต้นฝ้ายและรักษาสตรีค" : "Water today to care for your plant and keep your streak going."}</small></div>
+          <div><strong>{lang === "th" ? "อย่าลืมรดน้ำต้นฝ้ายวันนี้" : "Your cotton needs water today"}</strong><small>{lang === "th" ? "รดน้ำวันนี้เพื่อดูแลต้นฝ้ายและรักษาสถิติการดูแลต่อเนื่อง" : "Water today to care for your plant and keep your streak going."}</small></div>
           <button className="primary-button" onClick={onWater}>{lang === "th" ? "รดน้ำ" : "Water"}</button>
         </article>}
         {activities.map((item) => (
@@ -2262,13 +2475,22 @@ function PointShopSheet({ points, onClose, onClaim }: { points: number; onClose:
   const [claimed, setClaimed] = useState<string[]>([]);
   const [tab, setTab] = useState<"shop" | "coupons">("shop");
   const [wallet, setWallet] = useState([
-    { id: "welcome", title: lang === "th" ? "ส่วนลดร้านมือสอง 10%" : "10% off secondhand", code: "REWEAVE10", expires: "30 Sep 2026" },
+    { id: "welcome", title: lang === "th" ? "ส่วนลดร้านมือสอง 10%" : "10% off secondhand", code: "REWEAVE10", expires: "2026-09-30" },
   ]);
   const rewards = [
     ["repair", lang === "th" ? "ส่วนลดร้านซ่อม ฿200" : "$8 tailor discount", 600, "Repair"],
     ["wash", lang === "th" ? "ส่วนลดผลิตภัณฑ์ซักผ้า 15%" : "15% garment care", 850, "Care"],
     ["swap", lang === "th" ? "สิทธิ์เข้าร่วมงานแลกเสื้อผ้า" : "Clothing swap pass", 1100, "Community"],
   ] as const;
+  const couponTitle = (coupon: { id: string; title: string }) => coupon.id === "welcome"
+    ? (lang === "th" ? "ส่วนลดร้านเสื้อผ้ามือสอง 10%" : "10% off secondhand")
+    : coupon.id === "repair"
+      ? (lang === "th" ? "ส่วนลดร้านซ่อม ฿200" : "$8 tailor discount")
+      : coupon.id === "wash"
+        ? (lang === "th" ? "ส่วนลดผลิตภัณฑ์ดูแลเสื้อผ้า 15%" : "15% garment care")
+        : coupon.id === "swap"
+          ? (lang === "th" ? "สิทธิ์เข้าร่วมงานแลกเปลี่ยนเสื้อผ้า" : "Clothing swap pass")
+          : coupon.title;
   return (
     <div className="overlay" onClick={onClose}>
       <article className="sheet point-shop-sheet" onClick={(event) => event.stopPropagation()}>
@@ -2278,10 +2500,10 @@ function PointShopSheet({ points, onClose, onClaim }: { points: number; onClose:
           <button className={tab === "coupons" ? "active" : ""} onClick={() => setTab("coupons")}><Tag size={16} /> {lang === "th" ? `คูปองของฉัน (${wallet.length})` : `My coupons (${wallet.length})`}</button>
         </div>
         {tab === "shop" ? (
-          <div className="coupon-list">{rewards.map(([id, title, cost, category]) => <article className="coupon-card" key={id}><span className="coupon-icon"><Gift size={21} /></span><div><small>{category}</small><strong>{title}</strong><span>{cost} pts</span></div><button disabled={points < cost || claimed.includes(id)} onClick={() => { onClaim(cost); setClaimed([...claimed, id]); setWallet([...wallet, { id, title, code: `RW-${id.toUpperCase()}`, expires: "31 Dec 2026" }]); }}>{claimed.includes(id) ? <Check size={17} /> : (lang === "th" ? "แลก" : "Claim")}</button></article>)}</div>
+          <div className="coupon-list">{rewards.map(([id, title, cost, category]) => <article className="coupon-card" key={id}><span className="coupon-icon"><Gift size={21} /></span><div><small>{localizedLabel(lang, category)}</small><strong>{title}</strong><span>{cost} {lang === "th" ? "คะแนน" : "pts"}</span></div><button disabled={points < cost || claimed.includes(id)} onClick={() => { onClaim(cost); setClaimed([...claimed, id]); setWallet([...wallet, { id, title, code: `RW-${id.toUpperCase()}`, expires: "2026-12-31" }]); }}>{claimed.includes(id) ? <Check size={17} /> : (lang === "th" ? "แลก" : "Claim")}</button></article>)}</div>
         ) : (
           <div className="coupon-wallet">
-            {wallet.map((coupon) => <article key={coupon.id}><div><small>{lang === "th" ? "คูปองพร้อมใช้" : "Available coupon"}</small><strong>{coupon.title}</strong><code>{coupon.code}</code></div><span><small>{lang === "th" ? "ใช้ได้ถึง" : "Expires"}</small><strong>{coupon.expires}</strong></span></article>)}
+            {wallet.map((coupon) => <article key={coupon.id}><div><small>{lang === "th" ? "คูปองพร้อมใช้" : "Available coupon"}</small><strong>{couponTitle(coupon)}</strong><code>{coupon.code}</code></div><span><small>{lang === "th" ? "ใช้ได้ถึง" : "Expires"}</small><strong>{new Date(`${coupon.expires}T00:00:00`).toLocaleDateString(lang === "th" ? "th-TH" : "en", { day: "numeric", month: "short", year: "numeric" })}</strong></span></article>)}
           </div>
         )}
       </article>
@@ -2325,10 +2547,10 @@ function FriendListSheet({ friends, incomingRequests, unreadByChat, onClose, onS
           <span className="eyebrow">{lang === "th" ? `คำขอเป็นเพื่อน (${incomingRequests.length})` : `Friend requests (${incomingRequests.length})`}</span>
           {!visibleRequests.length && <p className="feed-empty">{lang === "th" ? "ไม่พบคำขอที่ตรงกัน" : "No requests match that search."}</p>}
           {visibleRequests.map((request) => {
-            const requester = request.sender ?? { name: "Member", handle: "" };
+            const requester = request.sender ?? { name: "", handle: "" };
             return <div className="incoming-request" key={request.senderId}>
               <span className="large-avatar">{requester.avatar ? <img src={requester.avatar} alt="" /> : (requester.name || "M").slice(0, 1)}</span>
-              <span><strong>{requester.name || "Member"}</strong><small>{requester.handle || (lang === "th" ? "ต้องการเป็นเพื่อนกับคุณ" : "Wants to be your friend")}</small></span>
+              <span><strong>{requester.name || localizedLabel(lang, "Member")}</strong><small>{requester.handle || (lang === "th" ? "ต้องการเป็นเพื่อนกับคุณ" : "Wants to be your friend")}</small></span>
               <button className="primary-button" disabled={Boolean(acceptingId)} onClick={() => void accept(request)}>{acceptingId === request.senderId ? <LoaderCircle className="spin" size={16} /> : <Check size={16} />}{lang === "th" ? "ยอมรับ" : "Accept"}</button>
             </div>;
           })}
@@ -2384,30 +2606,30 @@ function ProfileView({
     <div className="page profile-page">
       <section className="profile-hero">
         <div className="profile-avatar">{state.profile.avatar ? <img src={state.profile.avatar} alt={state.profile.displayName} /> : initials}<span><Check size={12} /></span></div>
-        <div><span className="eyebrow">{state.profile.verified ? "Verified member" : "Member"}</span><h2>{state.profile.displayName}</h2><p>{state.profile.username} · {state.profile.location}</p></div>
+        <div><span className="eyebrow">{localizedLabel(lang, state.profile.verified ? "Verified member" : "Member")}</span><h2>{state.profile.displayName}</h2><p>{state.profile.username} · {state.profile.location}</p></div>
         <button className="secondary-button" data-tour="edit-profile" onClick={() => setEditing(true)}><Settings size={17} /> {t.editProfile}</button>
       </section>
       <section className="impact-card">
-        <div><span className="eyebrow">Your circular impact</span><h2>{state.points.toLocaleString()} <small>points</small></h2><p>{lang === "th" ? "ทุกวันที่ดูแลช่วยให้เสื้อผ้าถูกใช้งานต่อ" : "Every cared-for day keeps textiles in use."}</p></div>
-        <div className="impact-stats"><span><strong>{state.plant.caredDays}</strong> cared days</span><span><strong>{state.garments.reduce((sum, garment) => sum + (garment.wearCount || 0), 0)}</strong> rewears</span><span><strong>{state.plant.streak}</strong> day streak</span></div>
+        <div><span className="eyebrow">{localizedLabel(lang, "Your circular impact")}</span><h2>{state.points.toLocaleString()} <small>{localizedLabel(lang, "points")}</small></h2><p>{lang === "th" ? "ทุกวันที่ดูแลช่วยให้เสื้อผ้าถูกใช้งานต่อ" : "Every cared-for day keeps textiles in use."}</p></div>
+        <div className="impact-stats"><span><strong>{state.plant.caredDays}</strong> {localizedLabel(lang, "cared days")}</span><span><strong>{state.garments.reduce((sum, garment) => sum + (garment.wearCount || 0), 0)}</strong> {localizedLabel(lang, "rewears")}</span><span><strong>{state.plant.streak}</strong> {localizedLabel(lang, "day streak")}</span></div>
       </section>
       <div className="profile-columns">
         <section className="menu-card" data-tour="profile-menu">
           <button onClick={() => setShop(true)}><span className="menu-icon"><ShoppingBag size={18} /></span><span><strong>{t.pointShop}</strong><small>{t.coupons}</small></span><ArrowRight size={18} /></button>
           <button onClick={onChat}><span className="menu-icon"><Users size={18} /></span><span><strong>{t.friends}</strong><small>{Object.values(unreadByChat).reduce((sum, messages) => sum + messages.length, 0)} {lang === "th" ? "ข้อความยังไม่อ่าน" : "unread messages"}</small></span><ArrowRight size={18} /></button>
           <button onClick={() => setPrivacyOpen(true)}><span className="menu-icon"><Lock size={18} /></span><span><strong>{lang === "th" ? "ความเป็นส่วนตัวและการแจ้งเตือน" : "Privacy & notifications"}</strong><small>{lang === "th" ? "จัดการผู้ชมโพสต์และประเภทการแจ้งเตือน" : "Choose post visibility and notification types"}</small></span><ArrowRight size={18} /></button>
-          <button onClick={() => setState((current) => ({ ...current, dark: !current.dark }))}><span className="menu-icon">{state.dark ? <Moon size={18} /> : <Sun size={18} />}</span><span><strong>Appearance</strong><small>{state.dark ? "Dark mode" : "Light mode"}</small></span><ChevronDown size={18} /></button>
+          <button onClick={() => setState((current) => ({ ...current, dark: !current.dark }))}><span className="menu-icon">{state.dark ? <Moon size={18} /> : <Sun size={18} />}</span><span><strong>{localizedLabel(lang, "Appearance")}</strong><small>{localizedLabel(lang, state.dark ? "Dark mode" : "Light mode")}</small></span><ChevronDown size={18} /></button>
         </section>
         <section className="friend-card" data-tour="friend-card">
-          <span className="eyebrow">Friends’ gardens</span>
-          <h3>A little help travels.</h3>
+          <span className="eyebrow">{localizedLabel(lang, "Friends’ gardens")}</span>
+          <h3>{localizedLabel(lang, "A little help travels.")}</h3>
           {!friends.length && <p className="friend-empty">{lang === "th" ? "เพิ่มเพื่อนเพื่อช่วยดูแลต้นฝ้ายและเริ่มแชต" : "Add friends to help with their cotton and start a chat."}</p>}
           {friends.map((friend) => {
             const helpedToday = friend.waterHelpBy?.[userId] === TODAY;
             const unread = unreadByChat[friend.chatId] ?? [];
             return <div className="friend-row friend-row-expanded" key={friend.uid}>
               <span className="friend-avatar">{friend.avatar ? <img src={friend.avatar} alt="" /> : friend.name.slice(0, 1)}</span>
-              <div><strong>{friend.name}’s cotton</strong><small>{helpedToday ? (lang === "th" ? "ช่วยวันนี้แล้ว" : "Helped today") : (lang === "th" ? "ต้องการน้ำวันนี้" : "Needs water today")}</small>
+              <div><strong>{lang === "th" ? `ต้นฝ้ายของ${friend.name}` : `${friend.name}’s cotton`}</strong><small>{helpedToday ? (lang === "th" ? "ช่วยวันนี้แล้ว" : "Helped today") : (lang === "th" ? "ต้องการน้ำวันนี้" : "Needs water today")}</small>
                 {helpedToday && unread.map((message) => <button className="unread-message" key={message.id} onClick={() => onChatWithFriend(friend)}><span>{message.sharedPost ? `${lang === "th" ? "แชร์โพสต์: " : "Shared post: "}${message.sharedPost.look}` : message.text}</span><i>{lang === "th" ? "ยังไม่อ่าน" : "Unread"}</i></button>)}
                 {helpedToday && !unread.length && <small>{lang === "th" ? "ไม่มีข้อความใหม่" : "No unread messages"}</small>}
               </div>
@@ -2503,7 +2725,7 @@ function ChatSheet({
 }
 
 function BottomNav({ tab, setTab }: { tab: MainTab; setTab: (tab: MainTab) => void }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const items: { id: MainTab; label: string; icon: typeof Sprout }[] = [
     { id: "plant", label: t.plant, icon: Sprout },
     { id: "closet", label: t.closet, icon: Shirt },
@@ -2511,7 +2733,7 @@ function BottomNav({ tab, setTab }: { tab: MainTab; setTab: (tab: MainTab) => vo
     { id: "profile", label: t.profile, icon: CircleUserRound },
   ];
   return (
-    <nav className="bottom-nav" aria-label="Main navigation">
+    <nav className="bottom-nav" aria-label={localizedLabel(lang, "Main navigation")}>
       {items.map((item) => {
         const Icon = item.icon;
         return <button key={item.id} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)}><Icon size={21} /><span>{item.label}</span></button>;
@@ -2522,6 +2744,7 @@ function BottomNav({ tab, setTab }: { tab: MainTab; setTab: (tab: MainTab) => vo
 
 /** Testing helpers. Only rendered by `pnpm dev` (import.meta.env.DEV), never in a production build. */
 function DevPanel({ setState }: { setState: React.Dispatch<React.SetStateAction<DemoState>> }) {
+  const { lang } = useLanguage();
   const [days, setDays] = useState(31);
   const setCaredDays = (n: number) => setState((current) => {
     const reached = plantStage(n) >= 4;
@@ -2535,17 +2758,17 @@ function DevPanel({ setState }: { setState: React.Dispatch<React.SetStateAction<
   const button = { padding: "4px 8px", fontSize: 12 } as const;
   return (
     <details style={{ position: "fixed", top: 8, right: 8, zIndex: 9999, background: "var(--paper)", color: "var(--ink)", border: "1px solid var(--line)", borderRadius: 12, padding: "6px 10px", fontSize: 12, boxShadow: "var(--shadow-soft)" }}>
-      <summary style={{ cursor: "pointer" }}>Dev tools</summary>
+      <summary style={{ cursor: "pointer" }}>{localizedLabel(lang, "Dev tools")}</summary>
       <div style={{ display: "grid", gap: 6, marginTop: 8, minWidth: 190 }}>
-        <label style={{ display: "flex", gap: 6, alignItems: "center" }}>Days cared
+        <label style={{ display: "flex", gap: 6, alignItems: "center" }}>{localizedLabel(lang, "Days cared")}
           <input type="number" min={0} max={200} value={days} onChange={(event) => setDays(Number(event.target.value))} style={{ width: 54 }} />
-          <button className="secondary-button" style={button} onClick={() => setCaredDays(days)}>Set</button>
+          <button className="secondary-button" style={button} onClick={() => setCaredDays(days)}>{localizedLabel(lang, "Set")}</button>
         </label>
-        <button className="secondary-button" style={button} onClick={() => setState((c) => ({ ...c, points: c.points + 100, profile: { ...c.profile, points: c.profile.points + 100 } }))}>+100 points</button>
-        <button className="secondary-button" style={button} onClick={() => setState((c) => ({ ...c, profile: { ...c.profile, buyingCredits: c.profile.buyingCredits + 1 } }))}>+1 buying credit</button>
-        <button className="secondary-button" style={button} onClick={() => setState((c) => ({ ...c, plant: { ...c.plant, alive: false, streak: 0 } }))}>Kill plant</button>
-        <button className="secondary-button" style={button} onClick={() => setState((c) => ({ ...c, wateredOn: null, postBonusOn: null }))}>Reset today’s water + post bonus</button>
-        <button className="secondary-button" style={button} onClick={() => setState((c) => ({ ...c, plant: freshPlant(TODAY), wateredOn: null, points: 0, profile: { ...c.profile, points: 0, buyingCredits: 0 } }))}>Reset plant, points, credits</button>
+        <button className="secondary-button" style={button} onClick={() => setState((c) => ({ ...c, points: c.points + 100, profile: { ...c.profile, points: c.profile.points + 100 } }))}>{localizedLabel(lang, "+100 points")}</button>
+        <button className="secondary-button" style={button} onClick={() => setState((c) => ({ ...c, profile: { ...c.profile, buyingCredits: c.profile.buyingCredits + 1 } }))}>{localizedLabel(lang, "+1 buying credit")}</button>
+        <button className="secondary-button" style={button} onClick={() => setState((c) => ({ ...c, plant: { ...c.plant, alive: false, streak: 0 } }))}>{localizedLabel(lang, "Kill plant")}</button>
+        <button className="secondary-button" style={button} onClick={() => setState((c) => ({ ...c, wateredOn: null, postBonusOn: null }))}>{localizedLabel(lang, "Reset today’s water + post bonus")}</button>
+        <button className="secondary-button" style={button} onClick={() => setState((c) => ({ ...c, plant: freshPlant(TODAY), wateredOn: null, points: 0, profile: { ...c.profile, points: 0, buyingCredits: 0 } }))}>{localizedLabel(lang, "Reset plant, points, credits")}</button>
       </div>
     </details>
   );
@@ -2553,6 +2776,7 @@ function DevPanel({ setState }: { setState: React.Dispatch<React.SetStateAction<
 
 export default function App() {
   const [tab, setTab] = useState<MainTab>("plant");
+  const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("reweave-language") as Lang) || "en");
   const { user, logout } = useAuth();
   const [state, setState] = useState<DemoState>(initialState);
   const stateRef = useRef(state);
@@ -2566,7 +2790,7 @@ export default function App() {
   const [pendingActivity, setPendingActivity] = useState<FriendActivityNotification | null>(null);
   const clearPendingActivity = useCallback(() => setPendingActivity(null), []);
   const [activeChatFriend, setActiveChatFriend] = useState<CommunityFriend | null>(null);
-  const { friends, incomingRequests, unreadByChat, error: inboxError } = useCommunityInbox(user.uid);
+  const { friends, incomingRequests, unreadByChat, error: inboxError } = useCommunityInbox(user.uid, lang);
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(() => {
     try {
       const saved = localStorage.getItem(`reweave-notifications-${user.uid}`);
@@ -2575,7 +2799,7 @@ export default function App() {
       return DEFAULT_NOTIFICATION_PREFERENCES;
     }
   });
-  const { activities, error: notificationError } = useFriendActivityNotifications(friends, notificationPreferences);
+  const { activities, error: notificationError } = useFriendActivityNotifications(friends, notificationPreferences, lang);
   const waterReminderDue = notificationPreferences.dailyWater && state.plant.alive && state.wateredOn !== TODAY;
   const [readActivityIds, setReadActivityIds] = useState<string[]>(() => {
     try {
@@ -2586,7 +2810,6 @@ export default function App() {
     }
   });
   const notificationCount = Number(waterReminderDue) + activities.filter((activity) => !readActivityIds.includes(activity.id)).length;
-  const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("reweave-language") as Lang) || "en");
   const t = copy[lang];
 
   useEffect(() => {
@@ -2761,9 +2984,9 @@ export default function App() {
 
   const addCloset = (rawName: string): string | null => {
     const name = rawName.trim().replace(/\s+/g, " ");
-    if (!name) return "Please give your closet a name.";
-    if (name.length > 24) return "Keep it under 24 characters.";
-    if (state.closets.some((closet) => closet.toLowerCase() === name.toLowerCase())) return "You already have a closet with that name.";
+    if (!name) return lang === "th" ? "โปรดตั้งชื่อตู้เสื้อผ้า" : "Please give your closet a name.";
+    if (name.length > 24) return lang === "th" ? "ชื่อตู้ต้องมีความยาวไม่เกิน 24 ตัวอักษร" : "Keep it under 24 characters.";
+    if (state.closets.some((closet) => closet.toLowerCase() === name.toLowerCase())) return lang === "th" ? "มีตู้เสื้อผ้าชื่อนี้แล้ว" : "You already have a closet with that name.";
     setState((current) => ({ ...current, closets: [...current.closets, name] }));
     return null;
   };
@@ -2786,7 +3009,7 @@ export default function App() {
 
   const syncFailed = (error: unknown) => {
     console.error("Sync failed", error);
-    setNotice("Couldn’t save to the cloud. Check your connection and try again.");
+    setNotice(lang === "th" ? "บันทึกข้อมูลออนไลน์ไม่สำเร็จ โปรดตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง" : "Couldn’t save to the cloud. Check your connection and try again.");
   };
 
   const createGarment = async (garment: Garment) => {
@@ -2893,7 +3116,7 @@ export default function App() {
     setChatOpen(true);
   };
 
-  if (!ready) return <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", color: "var(--ink-soft)" }}>Loading your garden…</div>;
+  if (!ready) return <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", color: "var(--ink-soft)" }}>{localizedLabel(lang, "Loading your garden…")}</div>;
 
   return (
     <LanguageContext.Provider value={{ lang, t }}>
@@ -2901,7 +3124,7 @@ export default function App() {
       {import.meta.env.DEV && <DevPanel setState={setState} />}
       <div className="brand-rail">
         <button className="brand" onClick={() => setTab("plant")}><span><Leaf size={17} /></span> reweave</button>
-        <div className="rail-note"><span>CARE / WEAR / SHARE</span><button className="secondary-button" onClick={logout} style={{ marginTop: 12 }}>Log out</button></div>
+        <div className="rail-note"><span>{localizedLabel(lang, "CARE / WEAR / SHARE")}</span><button className="secondary-button" onClick={logout} style={{ marginTop: 12 }}>{localizedLabel(lang, "Log out")}</button></div>
       </div>
       <main>
         <Header title={heading.title} eyebrow={heading.eyebrow} dark={state.dark} notificationCount={notificationCount} onTheme={() => setState((current) => ({ ...current, dark: !current.dark }))} onLanguage={() => setLang((current) => current === "en" ? "th" : "en")} onChat={() => setFriendsOpen(true)} onNotifications={() => setNotificationsOpen(true)} />
