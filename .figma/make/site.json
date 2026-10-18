@@ -1,0 +1,10 @@
+{
+  "description": "Engage in sustainable fashion by managing your closet, nurturing a virtual cotton plant, and connecting with a community to share styles and tips.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
