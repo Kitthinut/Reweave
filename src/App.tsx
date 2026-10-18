@@ -1694,7 +1694,7 @@ function PostDetailSheet({
   });
   return (
     <>
-      <div className="overlay" onClick={onClose}>
+      <div className="overlay post-detail-overlay" onClick={onClose}>
         <article className="sheet post-detail-sheet" onClick={(event) => event.stopPropagation()}>
           <img src={post.image} alt={post.look} />
           <div className="post-detail-side">
@@ -1710,9 +1710,10 @@ function PostDetailSheet({
             </div>
             <section className="comments" aria-label={lang === "th" ? "ความคิดเห็น" : "Comments"}>
               <strong className="comments-heading">{comments.length} {lang === "th" ? "ความคิดเห็น" : "Comments"}</strong>
-              {comments.length
-                ? comments.map((item) => <p key={item.id}><strong>{item.name}</strong> {item.text}</p>)
-                : <p className="comments-empty">{lang === "th" ? "ยังไม่มีความคิดเห็น เริ่มบทสนทนาได้เลย" : "No comments yet. Start the conversation."}</p>}
+              <div className="comment-box"><input id="post-comment-input" value={comment} onChange={(event) => setComment(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && comment.trim()) event.currentTarget.nextElementSibling instanceof HTMLButtonElement && event.currentTarget.nextElementSibling.click(); }} placeholder={lang === "th" ? "เพิ่มความคิดเห็น..." : "Add a comment..."} /><button disabled={!comment.trim()} onClick={async () => { const text = comment.trim(); if (!text) return; try { await onComment(text); setComment(""); setCommentError(""); } catch { setCommentError(lang === "th" ? "ส่งความคิดเห็นไม่สำเร็จ" : "Could not post comment. Check your connection and Firestore rules."); } }}>{lang === "th" ? "โพสต์" : "Post"}</button>{(likeError || commentError) && <small role="alert">{likeError || commentError}</small>}</div>
+              <div className="comments-list">{comments.length
+                  ? comments.map((item) => <p key={item.id}><strong>{item.name}</strong> {item.text}</p>)
+                  : <p className="comments-empty">{lang === "th" ? "ยังไม่มีความคิดเห็น เริ่มบทสนทนาได้เลย" : "No comments yet. Start the conversation."}</p>}</div>
             </section>
             <div className="post-detail-actions">
               <button className={`post-like-action ${isLiked ? "liked" : ""}`} aria-label={localizedLabel(lang, isLiked ? "Remove like" : "Like post")} disabled={liking} onClick={async () => {
@@ -1727,7 +1728,6 @@ function PostDetailSheet({
               <span className="post-comment-count"><MessageCircle size={19} /><span>{comments.length} {lang === "th" ? "ความคิดเห็น" : "comments"}</span></span>
               <button className="send-post-action" aria-label={lang === "th" ? "ส่งโพสต์ให้เพื่อน" : "Send post to a friend"} onClick={onShare}><Send size={16} /><span>{lang === "th" ? "ส่งโพสต์" : "Send post"}</span></button>
             </div>
-            <div className="comment-box"><input id="post-comment-input" value={comment} onChange={(event) => setComment(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && comment.trim()) event.currentTarget.nextElementSibling instanceof HTMLButtonElement && event.currentTarget.nextElementSibling.click(); }} placeholder={lang === "th" ? "เพิ่มความคิดเห็น..." : "Add a comment..."} /><button disabled={!comment.trim()} onClick={async () => { const text = comment.trim(); if (!text) return; try { await onComment(text); setComment(""); setCommentError(""); } catch { setCommentError(lang === "th" ? "ส่งความคิดเห็นไม่สำเร็จ" : "Could not post comment. Check your connection and Firestore rules."); } }}>{lang === "th" ? "โพสต์" : "Post"}</button>{(likeError || commentError) && <small role="alert">{likeError || commentError}</small>}</div>
           </div>
         </article>
       </div>
@@ -1907,6 +1907,9 @@ function FeedView({ garments, profile, userId, bonusAvailable, onPosted, openNot
     avatar: profile.avatar,
     authorBio: profile.bio,
   } : post);
+  const selectedPost = selected
+    ? postsWithCurrentAuthor.find((post) => post.id === selected.id) ?? selected
+    : null;
   const searchTerms = query.trim().toLocaleLowerCase().split(/\s+/).map((term) => term.replace(/^#/, "")).filter(Boolean);
   const visiblePosts = postsWithCurrentAuthor.filter((post) => {
     if (post.privacy !== "public") return false;
@@ -1961,7 +1964,7 @@ function FeedView({ garments, profile, userId, bonusAvailable, onPosted, openNot
         : (lang === "th" ? "ยังไม่มีโพสต์" : "No posts yet.")}</p>}
       {shareNotice && <p className="feed-success" role="status">{shareNotice}</p>}
       {composer && <PostComposer garments={garments} profile={profile} userId={userId} initial={composer === "new" ? undefined : composer} onClose={() => setComposer(null)} onSave={savePost} />}
-      {selected && <PostDetailSheet post={selected} garments={garments} canEdit={selected.ownerId === userId} isLiked={selected.likedBy?.includes(userId) ?? false} onLike={() => toggleLike(selected)} onShare={() => setSharingPost(selected)} onClose={() => setSelected(null)} onProfile={() => setViewedProfile(selected)} onEdit={() => setComposer(selected)} onComment={addComment} />}
+      {selectedPost && <PostDetailSheet post={selectedPost} garments={garments} canEdit={selectedPost.ownerId === userId} isLiked={selectedPost.likedBy?.includes(userId) ?? false} onLike={() => toggleLike(selectedPost)} onShare={() => setSharingPost(selectedPost)} onClose={() => setSelected(null)} onProfile={() => setViewedProfile(selectedPost)} onEdit={() => setComposer(selectedPost)} onComment={addComment} />}
       {sharingPost && <SendPostSheet post={sharingPost} userId={userId} senderName={profile.displayName} onClose={() => setSharingPost(null)} onSent={(friend) => { setShareNotice(lang === "th" ? `ส่งโพสต์ให้ ${friend.name} แล้ว` : `Post sent to ${friend.name}.`); setTimeout(() => setShareNotice(""), 3500); setSharingPost(null); }} />}
       {viewedProfile && <CommunityProfileSheet profileId={viewedProfile.ownerId || ""} userId={userId} currentMember={{ name: profile.displayName, handle: profile.username, avatar: profile.avatar, bio: profile.bio }} name={viewedProfile.name} handle={viewedProfile.handle} image={viewedProfile.avatar || ""} bio={viewedProfile.authorBio} onClose={() => setViewedProfile(null)} onOpenPost={(post) => { setViewedProfile(null); setSelected({ ...post, garmentIds: post.garmentIds ?? [], likedBy: post.likedBy ?? [], likes: post.likedBy?.length ?? post.likes ?? 0, comments: post.comments ?? [] }); }} />}
     </div>
