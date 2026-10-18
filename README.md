@@ -14,6 +14,7 @@ The interface is available in English and Thai. Image preparation and tag scanni
 - **Community:** Share outfit posts, interact with posts, and connect with friends through requests and messages.
 - **Marketplace:** Create and browse second-hand clothing listings. Purchases are demo transactions, not real payment processing.
 - **Profiles and preferences:** Manage profile details, choose English or Thai, and configure app preferences.
+- **Responsive layouts:** Use the app on desktop, tablet, and mobile screens, with mobile-aware dialogs, safe-area spacing, and form controls.
 
 ## Tech stack
 
@@ -45,7 +46,8 @@ src/
   plant.ts            Cotton plant growth and care rules
   communityTypes.ts   Shared community and marketplace data types
   Helptour.tsx        Guided in-app tour
-  index.css           Tailwind import and application styles
+  index.css           Tailwind import, theme, and shared application styles
+  mobile.css          Tablet and mobile responsive layouts
   main.tsx            React entry point
 ```
 

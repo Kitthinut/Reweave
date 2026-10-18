@@ -1,0 +1,143 @@
+@media (max-width: 900px) {
+  .app-shell { padding-left: 0; }
+  .brand-rail { position: static; width: auto; height: 58px; border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; padding: 0 22px; }
+  .brand { margin: 0; writing-mode: initial; transform: none; flex-direction: row-reverse; }
+  .brand span { transform: none; }
+  .rail-note { display: none; }
+  main { width: min(100% - 32px, 760px); }
+  .topbar { min-height: 100px; }
+  .hero-grid { grid-template-columns: 1fr; }
+  .plant-art { min-height: 390px; order: -1; }
+  .plant-copy { padding: 36px; }
+  .plant-copy h2 { font-size: 58px; }
+  .care-card { margin: 16px 0 0; }
+  .match-layout { grid-template-columns: 1fr; }
+  .match-intro { min-height: 400px; }
+  .secondhand-suggestion { grid-column: 1; }
+  .market-grid { grid-template-columns: repeat(2, 1fr); }
+  .profile-columns { grid-template-columns: 1fr; }
+  .reset-demo { display: none; }
+  .auth-page { grid-template-columns: 1fr 1fr; }
+  .auth-story { padding: 38px; }
+  .auth-story h1 { font-size: 66px; }
+  .detail-sheet, .listing-detail-sheet { width: min(720px, 100%); }
+}
+
+@media (max-width: 620px) {
+  main { width: calc(100% - 24px); padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+  .topbar { min-height: 91px; }
+  .topbar h1 { font-size: 27px; }
+  .top-actions .icon-button:first-of-type { display: none; }
+  .language-button { padding: 0 10px; }
+  .hero-grid { border-radius: 22px; }
+  .plant-art { min-height: 320px; }
+  .sun-orbit { width: 250px; height: 250px; }
+  .stem { height: 175px; bottom: 48px; }
+  .soil { bottom: 8px; transform: translateX(-50%) scale(.78); }
+  .cotton-one { top: 75px; }
+  .cotton-two { top: 135px; }
+  .cotton-three { top: 120px; }
+  .plant-copy { padding: 29px 24px 30px; }
+  .plant-copy h2 { font-size: 47px; }
+  .plant-copy p { font-size: 12px; }
+  .hero-stats { gap: 18px; padding-top: 25px; margin-top: 26px; }
+  .care-card { align-items: stretch; flex-direction: column; }
+  .care-card .primary-button { width: 100%; }
+  .progress-section { margin-top: 45px; }
+  .stage span { font-size: 8px; }
+  .stage strong { font-size: 9px; }
+  .fact-bar > span:nth-child(2) { font-size: 14px; }
+  .segmented { display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; }
+  .segmented button { justify-content: center; padding: 0 11px; }
+  .closet-toolbar { grid-template-columns: 1fr auto; }
+  .filter-button span { display: none; }
+  .add-button { grid-column: 1 / -1; }
+  .closet-summary { overflow-x: auto; }
+  .closet-summary span { flex: 0 0 auto; }
+  .wardrobe-rail { margin: 0; padding-left: 16px; }
+  .match-intro { min-height: 360px; }
+  .match-intro h2 { font-size: 48px; }
+  .outfit-board { padding: 16px; }
+  .outfit-canvas { height: 355px; }
+  .outfit-piece { width: 125px; }
+  .outfit-piece img { height: 130px; }
+  .piece-1 { left: 8%; }
+  .piece-2 { right: 8%; }
+  .secondhand-suggestion { grid-template-columns: 75px 1fr; }
+  .secondhand-suggestion .secondary-button { grid-column: 1 / -1; }
+  .suggestion-photo img { width: 75px; height: 75px; }
+  .feed-grid { grid-template-columns: 1fr; }
+  .share-prompt { align-items: flex-start; flex-direction: column; gap: 18px; }
+  .post-image-wrap img { height: 520px; }
+  .market-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .market-hero { min-height: 370px; grid-column: 1 / -1; align-items: flex-start; flex-direction: column; }
+  .market-hero h2 { font-size: 49px; }
+  .listing-card > img { height: 220px; }
+  .listing-card h3 { font-size: 17px; }
+  .listing-open-icon { display: none; }
+  .market-hero .sell-button { min-height: 42px; }
+  .checkout-sheet { align-self: flex-end; }
+  .board-banner { align-items: flex-start; flex-direction: column; gap: 24px; }
+  .board-banner h2 { font-size: 50px; }
+  .profile-hero { grid-template-columns: auto 1fr; }
+  .profile-hero .secondary-button { grid-column: 1 / -1; }
+  .impact-card { align-items: flex-start; flex-direction: column; gap: 30px; }
+  .impact-stats { width: 100%; justify-content: space-between; gap: 10px; }
+  .reward-strip { grid-template-columns: 1fr auto; }
+  .reward-strip .primary-button { grid-column: 1 / -1; }
+  .form-grid { grid-template-columns: 1fr; }
+  .capture-grid { grid-template-columns: 1fr 1fr; }
+  .sheet { max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); padding: 22px; }
+  .fact-sheet h2 { font-size: 36px; }
+  .detail-sheet, .listing-detail-sheet { display: block; padding: 0; align-self: flex-end; }
+  .detail-image { min-height: 330px; }
+  .detail-content, .listing-detail-content { padding: 27px 22px; }
+  .listing-detail-sheet > img { min-height: 330px; height: 330px; }
+  .detail-edit-grid { grid-template-columns: 1fr; }
+  .detail-edit-grid .wide { grid-column: auto; }
+  .detail-actions { position: sticky; bottom: 0; padding-top: 12px; background: var(--paper); }
+  .avatar-editor { grid-template-columns: auto 1fr; }
+  .avatar-editor small { grid-column: 1 / -1; }
+  .auth-page { display: block; min-height: 100dvh; }
+  .auth-story { min-height: 270px; padding: 25px; }
+  .auth-story h1 { font-size: 53px; margin: 15px 0 8px; }
+  .auth-story p { max-width: 290px; margin-bottom: 0; }
+  .auth-plant { width: 300px; right: -110px; bottom: -170px; }
+  .auth-panel { padding: 36px 24px; }
+  .chat-overlay { padding: 0; }
+  .chat-sheet, .friend-list-sheet { width: 100%; height: 100vh; height: 100dvh; border-radius: 0; }
+  .social-profile-sheet { align-self: stretch; }
+  .social-profile-head { grid-template-columns: auto minmax(0, 1fr); padding: 0 20px; }
+  .social-profile-actions { grid-column: 1 / -1; justify-content: stretch; margin: 0; }
+  .social-profile-actions button { flex: 1; justify-content: center; }
+  .profile-bio, .social-stats, .social-profile-section { padding-left: 20px; padding-right: 20px; }
+  .post-composer { align-self: flex-end; max-height: 96vh; max-height: 96dvh; }
+  .composer-fields { grid-template-columns: 1fr; }
+  .post-detail-sheet { display: block; height: 94vh; height: 94dvh; max-height: 94vh; max-height: 94dvh; align-self: flex-end; overflow-y: auto; }
+  .post-detail-sheet > img { height: 48vh; height: 48dvh; }
+  .post-detail-side { height: auto; min-height: 420px; display: flex; flex-direction: column; overflow: visible; }
+  .post-copy { overflow: visible; }
+  .comments { order: 2; min-height: 110px; }
+  .post-detail-actions { order: 1; }
+  .comment-box { order: 3; }
+  .settings-sheet, .point-shop-sheet, .notification-sheet { align-self: flex-end; }
+  .coupon-card { grid-template-columns: auto 1fr; }
+  .coupon-card > button { grid-column: 1 / -1; width: 100%; }
+  .filter-sheet, .reference-sheet, .thread-composer, .thread-detail-sheet { align-self: flex-end; }
+  .reference-upload { height: 260px; }
+  .filter-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .thread-detail-head, .thread-body, .thread-replies { padding-left: 22px; padding-right: 22px; }
+  .post-tagged-pieces { padding-left: 20px; padding-right: 20px; }
+  .wardrobe-rail { padding-left: 26px; padding-right: 26px; }
+  .garment-card { flex-basis: 166px; transform: rotateY(-30deg) rotateZ(-3deg) translateY(18px); }
+  .garment-card + .garment-card { margin-left: -35px; }
+  .garment-card:nth-child(even) { transform: rotateY(-27deg) rotateZ(-2deg) translateY(23px); }
+  .garment-card:hover, .garment-card:focus-visible { margin-right: 28px; transform: rotateY(-3deg) rotateZ(0) translateY(-7px) scale(1.02); }
+  .bottom-nav { bottom: max(16px, env(safe-area-inset-bottom)); }
+  input, select, textarea { font-size: 16px; }
+}
+
+@media (max-width: 390px) {
+  .hero-stats span { max-width: 70px; }
+  .market-grid { grid-template-columns: 1fr; }
+}
