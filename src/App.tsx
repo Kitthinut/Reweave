@@ -6,7 +6,7 @@ import HelpTour from "./Helptour";
 import { parseComposition, naturalFiberShare } from "./composition";
 import { prepareGarmentPhoto, readTagText } from "./ImageTools";
 import { colorCss } from "./colors";
-import { checkPlant, freshPlant, localDate, plantStage, STAGE_LABELS, STAGE_RANGES, DAYS_TO_FULL, type PlantData } from "./plant";
+import { checkPlant, freshPlant, localDate, plantStage, STAGE_LABELS, STAGE_RANGES, DAYS_TO_FULL, type PlantData } from "./Plant";
 import {
   ArrowLeft,
   ArrowRight,
