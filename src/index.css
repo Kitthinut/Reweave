@@ -475,7 +475,8 @@ main { width: min(1180px, calc(100% - 48px)); margin: auto; padding: 0 0 110px; 
 
 .post-detail-sheet { width: min(980px, 100%); height: min(720px, 90vh); max-height: 90vh; padding: 0; display: grid; grid-template-columns: 1.25fr .75fr; align-self: center; overflow: hidden; }
 .post-detail-sheet > img { width: 100%; height: 100%; object-fit: cover; background: var(--sage-light); }
-.post-detail-side { min-width: 0; display: grid; grid-template-rows: auto auto 1fr auto auto; }
+.post-detail-side { min-width: 0; min-height: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.post-detail-user, .post-copy, .post-tagged-pieces, .post-detail-actions, .comment-box { flex: 0 0 auto; }
 .post-detail-user { padding: 14px; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 9px; border-bottom: 1px solid var(--line); }
 .post-detail-user > button { border: 0; padding: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
 .post-detail-user > button:nth-child(2) { display: flex; flex-direction: column; }
@@ -491,14 +492,24 @@ main { width: min(1180px, calc(100% - 48px)); margin: auto; padding: 0 0 110px; 
 .post-tagged-pieces img { width: 100%; height: 52px; border-radius: 6px; object-fit: cover; }
 .post-tagged-pieces small { display: block; padding: 4px 2px 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 7px; }
 .post-tagged-pieces p { color: var(--ink-soft); font-size: 9px; }
-.comments { padding: 0 20px; overflow-y: auto; }
+.comments { order: 2; flex: 1 1 auto; min-height: 72px; padding: 0 20px; overflow-y: auto; }
+.comments-heading { display: block; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 10px; }
 .comments p { font-size: 10px; line-height: 1.5; }
-.post-detail-actions { padding: 14px 18px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
-.post-detail-actions button { border: 0; padding: 0; display: grid; place-items: center; color: inherit; background: transparent; cursor: pointer; }
-.post-detail-actions strong { margin-left: auto; font-size: 9px; }
-.comment-box { display: grid; grid-template-columns: 1fr auto; border-top: 1px solid var(--line); padding: 11px 15px; }
+.comments .comments-empty { color: var(--ink-soft); }
+.post-detail-actions { order: 1; min-height: 52px; padding: 8px 12px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.post-detail-actions button, .post-comment-count { min-width: 0; border: 0; padding: 6px 4px; display: flex; align-items: center; gap: 5px; color: inherit; background: transparent; font-size: 9px; cursor: pointer; }
+.post-comment-count { cursor: default; }
+.post-detail-actions .post-like-action { color: var(--green); }
+.post-detail-actions .post-like-action.liked { color: #bd4561; }
+.post-detail-actions button:disabled { opacity: .6; cursor: wait; }
+.post-detail-actions button span { white-space: nowrap; }
+.post-detail-actions .send-post-action { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 100px; padding: 8px 10px; color: var(--green); font-weight: 700; }
+.comment-box { order: 3; min-height: 58px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-top: 1px solid var(--line); padding: 8px 12px; background: var(--paper); }
+.comment-box input { min-width: 0; width: 100%; height: 38px; }
 .comment-box input { border: 0; outline: 0; color: var(--ink); background: transparent; }
-.comment-box button { border: 0; color: var(--green); background: transparent; font-size: 10px; font-weight: 700; cursor: pointer; }
+.comment-box button { min-height: 34px; border: 0; border-radius: 8px; padding: 0 10px; color: var(--paper); background: var(--green); font-size: 10px; font-weight: 700; cursor: pointer; }
+.comment-box button:disabled { opacity: .45; cursor: not-allowed; }
+.comment-box > small { grid-column: 1 / -1; color: #a83d39; font-size: 9px; }
 
 .settings-sheet, .point-shop-sheet { width: min(560px, 100%); align-self: center; }
 .notification-sheet { width: min(580px, 100%); align-self: center; max-height: min(82vh, 760px); overflow-y: auto; }
@@ -507,6 +518,10 @@ main { width: min(1180px, calc(100% - 48px)); margin: auto; padding: 0 0 110px; 
 .water-notification { grid-template-columns: 40px minmax(0, 1fr) auto; }
 .activity-notification { cursor: pointer; }
 .activity-notification:hover { background: var(--sage-light); }
+.activity-notification.read { color: var(--ink-soft); background: color-mix(in srgb, var(--sage-light) 55%, var(--paper)); }
+.activity-notification.read > img { filter: grayscale(1); opacity: .68; }
+.activity-notification.read .notification-icon { color: var(--ink-soft); background: var(--line); }
+.notification-read-label { color: var(--ink-soft); font-size: 8px; }
 .notification-item > img, .notification-icon { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; }
 .notification-icon { display: grid; place-items: center; color: var(--green); background: var(--sage-light); }
 .notification-item > div, .notification-item > span:nth-child(2) { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
@@ -552,6 +567,14 @@ html[lang="th"] .coupon-wallet article strong { font-family: "Noto Sans Thai", s
 
 .friend-list-sheet { width: min(440px, 100%); height: calc(100vh - 28px); max-height: none; border-radius: 24px; padding: 25px; }
 .friend-list-sheet .search-field { margin: 8px 0 18px; }
+.incoming-requests { padding: 0 0 12px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.incoming-requests > .eyebrow { margin-bottom: 8px; }
+.incoming-request { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+.incoming-request .large-avatar { width: 42px; height: 42px; border-width: 0; font-size: 15px; }
+.incoming-request > span:nth-child(2) { min-width: 0; display: flex; flex-direction: column; }
+.incoming-request strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.incoming-request small { overflow: hidden; margin-top: 3px; color: var(--ink-soft); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.incoming-request .primary-button { min-height: 34px; padding: 0 10px; font-size: 9px; }
 .friend-list { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
 .friend-list > button { position: relative; width: 100%; border: 0; border-bottom: 1px solid var(--line); padding: 13px 0; display: grid; grid-template-columns: auto 1fr auto; gap: 11px; align-items: center; color: inherit; background: transparent; text-align: left; cursor: pointer; }
 .friend-list .large-avatar { width: 45px; height: 45px; border-width: 0; font-size: 16px; }
@@ -770,7 +793,7 @@ html[lang="th"] .coupon-wallet article strong { font-family: "Noto Sans Thai", s
   .composer-fields { grid-template-columns: 1fr; }
   .post-detail-sheet { display: block; height: 94vh; align-self: flex-end; overflow-y: auto; }
   .post-detail-sheet > img { height: 48vh; }
-  .post-detail-side { display: block; }
+  .post-detail-side { height: auto; min-height: 420px; display: flex; overflow: visible; }
   .comments { min-height: 110px; }
   .settings-sheet, .point-shop-sheet, .notification-sheet { align-self: flex-end; }
   .coupon-card { grid-template-columns: auto 1fr; }

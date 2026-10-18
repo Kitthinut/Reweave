@@ -27,6 +27,14 @@ export type CommunityFriend = {
   waterHelpBy?: Record<string, string>;
 };
 
+export type CommunityFriendRequest = {
+  senderId: string;
+  recipientId: string;
+  sender: Pick<CommunityFriend, "name" | "handle" | "avatar">;
+  status: "pending";
+  createdAt: number;
+};
+
 export type CommunityMessage = {
   id: string;
   senderId: string;
@@ -187,6 +195,19 @@ export function subscribeCommunityFriends(uid: string, onFriends: (friends: Comm
       };
     }).filter((friend) => friend.uid);
     onFriends(friends);
+  }, onError);
+}
+
+export function subscribeIncomingCommunityFriendRequests(
+  uid: string,
+  onRequests: (requests: CommunityFriendRequest[]) => void,
+  onError: (error: Error) => void,
+) {
+  return onSnapshot(query(friendRequestsCollection, where("recipientId", "==", uid)), (snapshot) => {
+    onRequests(snapshot.docs
+      .map((item) => item.data() as CommunityFriendRequest)
+      .filter((request) => request.status === "pending")
+      .sort((a, b) => b.createdAt - a.createdAt));
   }, onError);
 }
 

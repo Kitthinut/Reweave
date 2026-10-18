@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthGate";
-import { acceptCommunityFriendRequest, addCommunityComment, createCommunityId, getCommunityRelationship, helpCommunityFriend, loadUser, markCommunityMessagesRead, saveUser, sendCommunityFriendRequest, sendCommunityMessage, setCommunityFollow, shrinkImage, loadGarments, saveGarment, removeGarment, setGarmentsCloset, saveCommunityPost, subscribeCommunityFriends, subscribeCommunityMessages, subscribeCommunityPosts, toggleCommunityLike, subscribeMarketplaceListings, createMarketplaceListing, completeMockPurchase, deleteMarketplaceListing, type CommunityFriend, type CommunityMessage } from "./userData";
+import { acceptCommunityFriendRequest, addCommunityComment, createCommunityId, getCommunityRelationship, helpCommunityFriend, loadUser, markCommunityMessagesRead, saveUser, sendCommunityFriendRequest, sendCommunityMessage, setCommunityFollow, shrinkImage, loadGarments, saveGarment, removeGarment, setGarmentsCloset, saveCommunityPost, subscribeCommunityFriends, subscribeCommunityMessages, subscribeCommunityPosts, subscribeIncomingCommunityFriendRequests, toggleCommunityLike, subscribeMarketplaceListings, createMarketplaceListing, completeMockPurchase, deleteMarketplaceListing, type CommunityFriend, type CommunityFriendRequest, type CommunityMessage } from "./userData";
 import type { CommunityComment, CommunityGarment, DemoPaymentMethod, FashionPost, MarketplaceListing } from "./communityTypes";
 import HelpTour from "./Helptour";
 import { parseComposition, naturalFiberShare } from "./composition";
@@ -101,8 +101,11 @@ function isFirestorePermissionDenied(error: unknown) {
 
 function useCommunityInbox(userId: string) {
   const [friends, setFriends] = useState<CommunityFriend[]>([]);
+  const [incomingRequests, setIncomingRequests] = useState<CommunityFriendRequest[]>([]);
   const [unreadByChat, setUnreadByChat] = useState<Record<string, CommunityMessage[]>>({});
-  const [error, setError] = useState("");
+  const [friendsError, setFriendsError] = useState("");
+  const [requestsError, setRequestsError] = useState("");
+  const [messagesError, setMessagesError] = useState("");
   useEffect(() => {
     let messageStops: (() => void)[] = [];
     const stopFriends = subscribeCommunityFriends(userId, (items) => {
@@ -117,19 +120,28 @@ function useCommunityInbox(userId: string) {
         }));
       }, (messageError) => {
         console.error("Could not load unread community messages", messageError);
-        setError("Could not load messages. Check your Firestore chat rules.");
+        setMessagesError("Could not load messages. Check your Firestore chat rules.");
       }));
-      setError("");
+      setMessagesError("");
+      setFriendsError("");
     }, (friendError) => {
       console.error("Could not load community friends", friendError);
-      setError("Could not load friends. Check your Firestore friendship rules.");
+      setFriendsError("Could not load friends. Check your Firestore friendship rules.");
+    });
+    const stopRequests = subscribeIncomingCommunityFriendRequests(userId, (requests) => {
+      setIncomingRequests(requests);
+      setRequestsError("");
+    }, (requestError) => {
+      console.error("Could not load incoming community friend requests", requestError);
+      setRequestsError("Could not load friend requests. Check your Firestore friend-request rules.");
     });
     return () => {
       stopFriends();
+      stopRequests();
       messageStops.forEach((stop) => stop());
     };
   }, [userId]);
-  return { friends, unreadByChat, error };
+  return { friends, incomingRequests, unreadByChat, error: [friendsError, requestsError, messagesError].filter(Boolean).join(" ") };
 }
 
 function useFriendActivityNotifications(friends: CommunityFriend[], preferences: NotificationPreferences) {
@@ -162,6 +174,13 @@ function useFriendActivityNotifications(friends: CommunityFriend[], preferences:
             title: post.look,
             image: post.image,
             createdAt: post.createdAt ?? 0,
+            postData: {
+              ...post,
+              garmentIds: post.garmentIds ?? [],
+              likedBy: post.likedBy ?? [],
+              likes: post.likedBy?.length ?? post.likes ?? 0,
+              comments: post.comments ?? [],
+            },
           }));
         publish();
         setError("");
@@ -181,6 +200,7 @@ function useFriendActivityNotifications(friends: CommunityFriend[], preferences:
             title: listing.name,
             image: listing.image,
             createdAt: listing.createdAt,
+            listingData: { ...listing, tags: Array.isArray(listing.tags) ? listing.tags : [] },
           }));
         publish();
         setError("");
@@ -299,6 +319,8 @@ type FriendActivityNotification = {
   title: string;
   image: string;
   createdAt: number;
+  postData?: FashionPost;
+  listingData?: MarketplaceListing;
 };
 
 const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
@@ -1390,7 +1412,7 @@ function PostDetailSheet({
   onProfile: () => void;
   onEdit: () => void;
   onComment: (comment: string) => Promise<void>;
-  onLike: () => void;
+  onLike: () => Promise<boolean>;
   onShare: () => void;
   canEdit: boolean;
   isLiked: boolean;
@@ -1398,6 +1420,10 @@ function PostDetailSheet({
   const { lang } = useLanguage();
   const [comment, setComment] = useState("");
   const [commentError, setCommentError] = useState("");
+  const [likeError, setLikeError] = useState("");
+  const [liking, setLiking] = useState(false);
+  const comments = post.comments ?? [];
+  const likes = post.likedBy?.length ?? post.likes ?? 0;
   const taggedGarments: CommunityGarment[] = post.taggedPieces ?? (canEdit ? garments
     .filter((garment) => post.garmentIds.includes(String(garment.id)))
     .map(({ id, name, type, color, material, style, occasion }) => ({ id: String(id), name, type, color, material, style, occasion })) : []);
@@ -1412,9 +1438,26 @@ function PostDetailSheet({
             <strong><Tag size={14} /> {lang === "th" ? "เสื้อผ้าในลุคนี้" : "Pieces in this look"}</strong>
             <div>{taggedGarments.length ? taggedGarments.map((garment) => <span key={garment.id}><small>{garmentName(garment, lang)}</small>{[garment.type, garment.color, garment.material, garment.style].filter(Boolean).join(" · ") && <small>{[garment.type, garment.color, garment.material, garment.style].filter(Boolean).join(" · ")}</small>}</span>) : <p>{lang === "th" ? "ไม่ได้แท็กเสื้อผ้า" : "No clothing tagged."}</p>}</div>
           </div>
-          <div className="comments">{post.comments.map((item) => <p key={item.id}><strong>{item.name}</strong> {item.text}</p>)}</div>
-          <div className="post-detail-actions"><button aria-label={isLiked ? "Remove like" : "Like post"} onClick={onLike}><Heart size={21} fill={isLiked ? "currentColor" : "none"} /></button><button aria-label={lang === "th" ? "เขียนความคิดเห็น" : "Write a comment"} onClick={() => document.getElementById("post-comment-input")?.focus()}><MessageCircle size={21} /></button><button aria-label={lang === "th" ? "ส่งโพสต์ให้เพื่อน" : "Send post to a friend"} onClick={onShare}><Send size={21} /></button><strong>{post.likedBy?.length ?? post.likes} {lang === "th" ? "ถูกใจ" : "likes"} · {post.comments?.length ?? 0} {lang === "th" ? "ความคิดเห็น" : "comments"}</strong></div>
-          <div className="comment-box"><input id="post-comment-input" value={comment} onChange={(event) => setComment(event.target.value)} placeholder={lang === "th" ? "เพิ่มความคิดเห็น..." : "Add a comment..."} /><button onClick={async () => { const text = comment.trim(); if (!text) return; try { await onComment(text); setComment(""); setCommentError(""); } catch { setCommentError(lang === "th" ? "ส่งความคิดเห็นไม่สำเร็จ" : "Could not post comment."); } }}>{lang === "th" ? "โพสต์" : "Post"}</button>{commentError && <small role="alert">{commentError}</small>}</div>
+          <section className="comments" aria-label={lang === "th" ? "ความคิดเห็น" : "Comments"}>
+            <strong className="comments-heading">{comments.length} {lang === "th" ? "ความคิดเห็น" : "Comments"}</strong>
+            {comments.length
+              ? comments.map((item) => <p key={item.id}><strong>{item.name}</strong> {item.text}</p>)
+              : <p className="comments-empty">{lang === "th" ? "ยังไม่มีความคิดเห็น เริ่มบทสนทนาได้เลย" : "No comments yet. Start the conversation."}</p>}
+          </section>
+          <div className="post-detail-actions">
+            <button className={`post-like-action ${isLiked ? "liked" : ""}`} aria-label={isLiked ? "Remove like" : "Like post"} disabled={liking} onClick={async () => {
+              setLiking(true);
+              setLikeError("");
+              try {
+                if (!await onLike()) setLikeError(lang === "th" ? "กดถูกใจไม่สำเร็จ โปรดลองอีกครั้ง" : "Could not update like. Check your connection and Firestore rules.");
+              } finally {
+                setLiking(false);
+              }
+            }}><Heart size={19} fill={isLiked ? "currentColor" : "none"} /><span>{isLiked ? (lang === "th" ? "ถูกใจแล้ว" : "Liked") : (lang === "th" ? "ถูกใจ" : "Like")} · {likes}</span></button>
+            <span className="post-comment-count"><MessageCircle size={19} /><span>{comments.length} {lang === "th" ? "ความคิดเห็น" : "comments"}</span></span>
+            <button className="send-post-action" aria-label={lang === "th" ? "ส่งโพสต์ให้เพื่อน" : "Send post to a friend"} onClick={onShare}><Send size={16} /><span>{lang === "th" ? "ส่งโพสต์" : "Send post"}</span></button>
+          </div>
+          <div className="comment-box"><input id="post-comment-input" value={comment} onChange={(event) => setComment(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && comment.trim()) event.currentTarget.nextElementSibling instanceof HTMLButtonElement && event.currentTarget.nextElementSibling.click(); }} placeholder={lang === "th" ? "เพิ่มความคิดเห็น..." : "Add a comment..."} /><button disabled={!comment.trim()} onClick={async () => { const text = comment.trim(); if (!text) return; try { await onComment(text); setComment(""); setCommentError(""); } catch { setCommentError(lang === "th" ? "ส่งความคิดเห็นไม่สำเร็จ" : "Could not post comment. Check your connection and Firestore rules."); } }}>{lang === "th" ? "โพสต์" : "Post"}</button>{(likeError || commentError) && <small role="alert">{likeError || commentError}</small>}</div>
         </div>
       </article>
     </div>
@@ -1464,7 +1507,15 @@ function SendPostSheet({ post, userId, senderName, onClose, onSent }: { post: Fa
   );
 }
 
-function FeedView({ garments, profile, userId, bonusAvailable, onPosted }: { garments: Garment[]; profile: Profile; userId: string; bonusAvailable: boolean; onPosted: () => void }) {
+function FeedView({ garments, profile, userId, bonusAvailable, onPosted, openNotification, onNotificationOpened }: {
+  garments: Garment[];
+  profile: Profile;
+  userId: string;
+  bonusAvailable: boolean;
+  onPosted: () => void;
+  openNotification: FriendActivityNotification | null;
+  onNotificationOpened: () => void;
+}) {
   const { lang, t } = useLanguage();
   const [feedPosts, setFeedPosts] = useState<FashionPost[]>([]);
   const [composer, setComposer] = useState<FashionPost | "new" | null>(null);
@@ -1503,6 +1554,11 @@ function FeedView({ garments, profile, userId, bonusAvailable, onPosted }: { gar
     const updated = feedPosts.find((post) => post.id === selected.id);
     if (updated && updated !== selected) setSelected(updated);
   }, [feedPosts, selected]);
+  useEffect(() => {
+    if (openNotification?.type !== "post" || !openNotification.postData) return;
+    setSelected(openNotification.postData);
+    onNotificationOpened();
+  }, [openNotification, onNotificationOpened]);
   const savePost = async (post: FashionPost) => {
     const before = feedPosts.find((item) => item.id === post.id);
     await saveCommunityPost(userId, post);
@@ -1541,6 +1597,7 @@ function FeedView({ garments, profile, userId, bonusAvailable, onPosted }: { gar
     const liked = post.likedBy?.includes(userId) ?? false;
     try {
       await toggleCommunityLike(post.id, userId, liked);
+      return true;
     } catch (error) {
       console.error("Could not update community like", error);
       setFeedError(isFirestorePermissionDenied(error)
@@ -1548,6 +1605,7 @@ function FeedView({ garments, profile, userId, bonusAvailable, onPosted }: { gar
           ? "กฎ Firestore ปฏิเสธการถูกใจ: อนุญาตให้ผู้ใช้ที่เข้าสู่ระบบอัปเดตการถูกใจโพสต์สาธารณะ"
           : "Firestore rules denied this appreciation. Allow signed-in users to update likes on public posts."
         : lang === "th" ? "อัปเดตการถูกใจไม่สำเร็จ โปรดลองอีกครั้ง" : "Could not update your appreciation. Please try again.");
+      return false;
     }
   };
   const searchTerms = query.trim().toLocaleLowerCase().split(/\s+/).map((term) => term.replace(/^#/, "")).filter(Boolean);
@@ -1604,7 +1662,7 @@ function FeedView({ garments, profile, userId, bonusAvailable, onPosted }: { gar
         : (lang === "th" ? "ยังไม่มีโพสต์" : "No posts yet.")}</p>}
       {shareNotice && <p className="feed-success" role="status">{shareNotice}</p>}
       {composer && <PostComposer garments={garments} profile={profile} userId={userId} initial={composer === "new" ? undefined : composer} onClose={() => setComposer(null)} onSave={savePost} />}
-      {selected && <PostDetailSheet post={selected} garments={garments} canEdit={selected.ownerId === userId} isLiked={selected.likedBy?.includes(userId) ?? false} onLike={() => void toggleLike(selected)} onShare={() => setSharingPost(selected)} onClose={() => setSelected(null)} onProfile={() => setViewedProfile(selected)} onEdit={() => setComposer(selected)} onComment={addComment} />}
+      {selected && <PostDetailSheet post={selected} garments={garments} canEdit={selected.ownerId === userId} isLiked={selected.likedBy?.includes(userId) ?? false} onLike={() => toggleLike(selected)} onShare={() => setSharingPost(selected)} onClose={() => setSelected(null)} onProfile={() => setViewedProfile(selected)} onEdit={() => setComposer(selected)} onComment={addComment} />}
       {sharingPost && <SendPostSheet post={sharingPost} userId={userId} senderName={profile.displayName} onClose={() => setSharingPost(null)} onSent={(friend) => { setShareNotice(lang === "th" ? `ส่งโพสต์ให้ ${friend.name} แล้ว` : `Post sent to ${friend.name}.`); setTimeout(() => setShareNotice(""), 3500); setSharingPost(null); }} />}
       {viewedProfile && <CommunityProfileSheet profileId={viewedProfile.ownerId || ""} userId={userId} currentMember={{ name: profile.displayName, handle: profile.username, avatar: profile.avatar }} name={viewedProfile.name} handle={viewedProfile.handle} image={viewedProfile.avatar || ""} bio={viewedProfile.authorBio} onClose={() => setViewedProfile(null)} onOpenPost={(post) => { setViewedProfile(null); setSelected({ ...post, garmentIds: post.garmentIds ?? [], likedBy: post.likedBy ?? [], likes: post.likedBy?.length ?? post.likes ?? 0, comments: post.comments ?? [] }); }} />}
     </div>
@@ -1784,18 +1842,25 @@ function ListingDetailSheet({ listing, userId, currentMember, onClose, onPurchas
   );
 }
 
-function MarketView({ profile, userId, onPurchase, onDelete, onCreate }: {
+function MarketView({ profile, userId, onPurchase, onDelete, onCreate, openNotification, onNotificationOpened }: {
   profile: Profile;
   userId: string;
   onPurchase: (listing: MarketplaceListing, method: DemoPaymentMethod) => Promise<void>;
   onDelete: (listing: MarketplaceListing) => Promise<void>;
   onCreate: (listing: MarketplaceListing) => Promise<void>;
+  openNotification: FriendActivityNotification | null;
+  onNotificationOpened: () => void;
 }) {
   const { lang, t } = useLanguage();
   const { listings, loading, error } = useMarketplaceListings(lang);
   const [selected, setSelected] = useState<MarketplaceListing | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [query, setQuery] = useState("");
+  useEffect(() => {
+    if (openNotification?.type !== "listing" || !openNotification.listingData) return;
+    setSelected(openNotification.listingData);
+    onNotificationOpened();
+  }, [openNotification, onNotificationOpened]);
   const searchTerms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   const visibleListings = listings.filter((listing) => {
     const text = [listing.name, listing.type, listing.size, listing.seller, listing.material, listing.style, ...listing.tags].join(" ").toLocaleLowerCase();
@@ -1887,16 +1952,22 @@ function BoardView() {
   );
 }
 
-function CommunityView({ state, userId, onPosted, onPurchase, onDeleteListing, onCreateListing }: {
+function CommunityView({ state, userId, onPosted, onPurchase, onDeleteListing, onCreateListing, openNotification, onNotificationOpened }: {
   state: DemoState;
   userId: string;
   onPosted: () => void;
   onPurchase: (listing: MarketplaceListing, method: DemoPaymentMethod) => Promise<void>;
   onDeleteListing: (listing: MarketplaceListing) => Promise<void>;
   onCreateListing: (listing: MarketplaceListing) => Promise<void>;
+  openNotification: FriendActivityNotification | null;
+  onNotificationOpened: () => void;
 }) {
   const { t } = useLanguage();
   const [tab, setTab] = useState<CommunityTab>("feed");
+  useEffect(() => {
+    if (openNotification?.type === "listing") setTab("shop");
+    else if (openNotification?.type === "post") setTab("feed");
+  }, [openNotification]);
   return (
     <div className="page">
       <div className="segmented community-segments">
@@ -1904,8 +1975,8 @@ function CommunityView({ state, userId, onPosted, onPurchase, onDeleteListing, o
         <button data-tour="community-market-tab" className={tab === "shop" ? "active" : ""} onClick={() => setTab("shop")}><Store size={17} /> {t.shop}</button>
       </div>
       {tab === "feed"
-        ? <FeedView garments={state.garments} profile={state.profile} userId={userId} bonusAvailable={state.postBonusOn !== TODAY} onPosted={onPosted} />
-        : <MarketView profile={state.profile} userId={userId} onPurchase={onPurchase} onDelete={onDeleteListing} onCreate={onCreateListing} />}
+        ? <FeedView garments={state.garments} profile={state.profile} userId={userId} bonusAvailable={state.postBonusOn !== TODAY} onPosted={onPosted} openNotification={openNotification} onNotificationOpened={onNotificationOpened} />
+        : <MarketView profile={state.profile} userId={userId} onPurchase={onPurchase} onDelete={onDeleteListing} onCreate={onCreateListing} openNotification={openNotification} onNotificationOpened={onNotificationOpened} />}
     </div>
   );
 }
@@ -2003,13 +2074,15 @@ function PrivacySheet({ profile, notifications, onClose, onSave, onSaveNotificat
   );
 }
 
-function NotificationSheet({ waterDue, activities, error, onClose, onWater, onOpenCommunity }: {
+function NotificationSheet({ waterDue, activities, readActivityIds, error, onClose, onWater, onOpenActivity, onReadActivity }: {
   waterDue: boolean;
   activities: FriendActivityNotification[];
+  readActivityIds: string[];
   error: string;
   onClose: () => void;
   onWater: () => void;
-  onOpenCommunity: () => void;
+  onOpenActivity: (activity: FriendActivityNotification) => void;
+  onReadActivity: (id: string) => void;
 }) {
   const { lang } = useLanguage();
   return (
@@ -2025,14 +2098,16 @@ function NotificationSheet({ waterDue, activities, error, onClose, onWater, onOp
           <button className="primary-button" onClick={onWater}>{lang === "th" ? "รดน้ำ" : "Water"}</button>
         </article>}
         {activities.map((item) => (
-          <button className="notification-item activity-notification" key={item.id} onClick={onOpenCommunity}>
+          <button className={`notification-item activity-notification ${readActivityIds.includes(item.id) ? "read" : ""}`} key={item.id} onClick={() => { onReadActivity(item.id); onOpenActivity(item); }}>
             {item.image ? <img src={item.image} alt="" /> : <span className="notification-icon">{item.type === "post" ? <Heart size={19} /> : <ShoppingBag size={19} />}</span>}
             <span><strong>{item.type === "post"
               ? (lang === "th" ? `${item.friendName} แชร์ลุคใหม่` : `${item.friendName} shared a new look`)
               : (lang === "th" ? `${item.friendName} ลงขายสินค้าใหม่` : `${item.friendName} listed a new item`)}</strong>
               <small>{item.title}{item.createdAt ? ` · ${new Date(item.createdAt).toLocaleDateString(lang === "th" ? "th-TH" : "en")}` : ""}</small>
             </span>
-            <ArrowRight size={17} />
+            {readActivityIds.includes(item.id)
+              ? <small className="notification-read-label">{lang === "th" ? "อ่านแล้ว" : "Read"}</small>
+              : <ArrowRight size={17} />}
           </button>
         ))}
         {!waterDue && !activities.length && !error && <p className="feed-empty">{lang === "th" ? "ยังไม่มีการแจ้งเตือนใหม่" : "You’re all caught up. No notifications right now."}</p>}
@@ -2074,16 +2149,52 @@ function PointShopSheet({ points, onClose, onClaim }: { points: number; onClose:
   );
 }
 
-function FriendListSheet({ friends, unreadByChat, onClose, onSelect }: { friends: CommunityFriend[]; unreadByChat: Record<string, CommunityMessage[]>; onClose: () => void; onSelect: (friend: CommunityFriend) => void }) {
+function FriendListSheet({ friends, incomingRequests, unreadByChat, onClose, onSelect, onAccept }: {
+  friends: CommunityFriend[];
+  incomingRequests: CommunityFriendRequest[];
+  unreadByChat: Record<string, CommunityMessage[]>;
+  onClose: () => void;
+  onSelect: (friend: CommunityFriend) => void;
+  onAccept: (request: CommunityFriendRequest) => Promise<void>;
+}) {
   const { lang } = useLanguage();
   const [search, setSearch] = useState("");
+  const [acceptingId, setAcceptingId] = useState("");
+  const [acceptError, setAcceptError] = useState("");
   const visibleFriends = friends.filter((friend) => `${friend.name} ${friend.handle}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
+  const visibleRequests = incomingRequests.filter((request) => `${request.sender?.name ?? ""} ${request.sender?.handle ?? ""}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
+
+  const accept = async (request: CommunityFriendRequest) => {
+    setAcceptingId(request.senderId);
+    setAcceptError("");
+    try {
+      await onAccept(request);
+    } catch (error) {
+      console.error("Could not accept community friend request", error);
+      setAcceptError(lang === "th" ? "ยอมรับคำขอไม่สำเร็จ ตรวจสอบกฎ Firestore" : "Could not accept request. Check your Firestore friend-request and friendship rules.");
+    } finally {
+      setAcceptingId("");
+    }
+  };
   return (
     <div className="overlay chat-overlay" onClick={onClose}>
       <article className="sheet friend-list-sheet" onClick={(event) => event.stopPropagation()}>
         <div className="sheet-header"><div><span className="eyebrow">{lang === "th" ? "ข้อความ" : "Messages"}</span><h2>{lang === "th" ? "เพื่อนของคุณ" : "Your friends"}</h2></div><button className="close-button" onClick={onClose}><X size={20} /></button></div>
         <label className="search-field"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={lang === "th" ? "ค้นหาเพื่อน" : "Search friends"} /></label>
-        {!friends.length && <p className="feed-empty">{lang === "th" ? "ยังไม่มีเพื่อน ยืนยันคำขอเป็นเพื่อนจากโปรไฟล์สมาชิกก่อน" : "No friends yet. Accept a friend request from a member profile to start chatting."}</p>}
+        {!!incomingRequests.length && <section className="incoming-requests">
+          <span className="eyebrow">{lang === "th" ? `คำขอเป็นเพื่อน (${incomingRequests.length})` : `Friend requests (${incomingRequests.length})`}</span>
+          {!visibleRequests.length && <p className="feed-empty">{lang === "th" ? "ไม่พบคำขอที่ตรงกัน" : "No requests match that search."}</p>}
+          {visibleRequests.map((request) => {
+            const requester = request.sender ?? { name: "Member", handle: "" };
+            return <div className="incoming-request" key={request.senderId}>
+              <span className="large-avatar">{requester.avatar ? <img src={requester.avatar} alt="" /> : (requester.name || "M").slice(0, 1)}</span>
+              <span><strong>{requester.name || "Member"}</strong><small>{requester.handle || (lang === "th" ? "ต้องการเป็นเพื่อนกับคุณ" : "Wants to be your friend")}</small></span>
+              <button className="primary-button" disabled={Boolean(acceptingId)} onClick={() => void accept(request)}>{acceptingId === request.senderId ? <LoaderCircle className="spin" size={16} /> : <Check size={16} />}{lang === "th" ? "ยอมรับ" : "Accept"}</button>
+            </div>;
+          })}
+          {acceptError && <p className="feed-error" role="alert">{acceptError}</p>}
+        </section>}
+        {!friends.length && !incomingRequests.length && <p className="feed-empty">{lang === "th" ? "ยังไม่มีเพื่อนหรือคำขอเป็นเพื่อน" : "No friends or incoming requests yet."}</p>}
         {!!friends.length && !visibleFriends.length && <p className="feed-empty">{lang === "th" ? "ไม่พบเพื่อน" : "No friends match that search."}</p>}
         <div className="friend-list">{visibleFriends.map((friend) => {
           const unread = unreadByChat[friend.chatId] ?? [];
@@ -2310,8 +2421,10 @@ export default function App() {
   const [chatOpen, setChatOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [pendingActivity, setPendingActivity] = useState<FriendActivityNotification | null>(null);
+  const clearPendingActivity = useCallback(() => setPendingActivity(null), []);
   const [activeChatFriend, setActiveChatFriend] = useState<CommunityFriend | null>(null);
-  const { friends, unreadByChat, error: inboxError } = useCommunityInbox(user.uid);
+  const { friends, incomingRequests, unreadByChat, error: inboxError } = useCommunityInbox(user.uid);
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(() => {
     try {
       const saved = localStorage.getItem(`reweave-notifications-${user.uid}`);
@@ -2322,7 +2435,15 @@ export default function App() {
   });
   const { activities, error: notificationError } = useFriendActivityNotifications(friends, notificationPreferences);
   const waterReminderDue = notificationPreferences.dailyWater && state.plant.alive && state.wateredOn !== TODAY;
-  const notificationCount = Number(waterReminderDue) + activities.length;
+  const [readActivityIds, setReadActivityIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(`reweave-read-notifications-${user.uid}`);
+      return saved ? JSON.parse(saved) as string[] : [];
+    } catch {
+      return [];
+    }
+  });
+  const notificationCount = Number(waterReminderDue) + activities.filter((activity) => !readActivityIds.includes(activity.id)).length;
   const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("reweave-language") as Lang) || "en");
   const t = copy[lang];
 
@@ -2417,6 +2538,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(`reweave-notifications-${user.uid}`, JSON.stringify(notificationPreferences));
   }, [notificationPreferences, user.uid]);
+
+  useEffect(() => {
+    localStorage.setItem(`reweave-read-notifications-${user.uid}`, JSON.stringify(readActivityIds));
+  }, [readActivityIds, user.uid]);
 
   const heading = useMemo(() => {
     const firstName = state.profile.displayName.split(" ")[0] || "there";
@@ -2532,6 +2657,13 @@ export default function App() {
       setNotice(lang === "th" ? "ช่วยดูแลต้นฝ้ายไม่สำเร็จ ตรวจสอบกฎ Firestore" : "Could not help this garden. Check the Firestore friendship rules.");
     }
   };
+  const acceptFriendRequest = async (request: CommunityFriendRequest) => {
+    await acceptCommunityFriendRequest(user.uid, request.senderId, {
+      name: state.profile.displayName,
+      handle: state.profile.username,
+      avatar: state.profile.avatar,
+    });
+  };
   const openChat = (friend: CommunityFriend) => {
     setActiveChatFriend(friend);
     setFriendsOpen(false);
@@ -2552,15 +2684,15 @@ export default function App() {
         <Header title={heading.title} eyebrow={heading.eyebrow} dark={state.dark} notificationCount={notificationCount} onTheme={() => setState((current) => ({ ...current, dark: !current.dark }))} onLanguage={() => setLang((current) => current === "en" ? "th" : "en")} onChat={() => setFriendsOpen(true)} onNotifications={() => setNotificationsOpen(true)} />
         {tab === "plant" && <PlantView state={state} onWater={waterPlant} onReplant={replant} />}
         {tab === "closet" && <ClosetView state={state} userId={user.uid} onCreate={createGarment} onUpdate={updateGarment} onDelete={deleteGarment} onAddCloset={addCloset} onDeleteCloset={deleteCloset} onPurchase={purchase} onDeleteListing={deleteListing} />}
-        {tab === "community" && <CommunityView state={state} userId={user.uid} onPosted={claimPostBonus} onPurchase={purchase} onDeleteListing={deleteListing} onCreateListing={createListing} />}
+        {tab === "community" && <CommunityView state={state} userId={user.uid} onPosted={claimPostBonus} onPurchase={purchase} onDeleteListing={deleteListing} onCreateListing={createListing} openNotification={pendingActivity} onNotificationOpened={clearPendingActivity} />}
         {tab === "profile" && <ProfileView state={state} userId={user.uid} friends={friends} unreadByChat={unreadByChat} setState={setState} onSaveProfile={saveProfile} notifications={notificationPreferences} onSaveNotifications={setNotificationPreferences} onChat={() => setFriendsOpen(true)} onFriendWater={friendWater} onChatWithFriend={openChat} />}
       </main>
       <BottomNav tab={tab} setTab={setTab} />
       <HelpTour lang={lang} setTab={setTab} open={tourOpen} setOpen={setTour} />
       {notice && <div className="toast" role="status">{notice}</div>}
       {inboxError && <div className="toast" role="alert">{inboxError}</div>}
-      {notificationsOpen && <NotificationSheet waterDue={waterReminderDue} activities={activities} error={notificationError} onClose={() => setNotificationsOpen(false)} onWater={() => void waterPlant()} onOpenCommunity={() => { setTab("community"); setNotificationsOpen(false); }} />}
-      {friendsOpen && <FriendListSheet friends={friends} unreadByChat={unreadByChat} onClose={() => setFriendsOpen(false)} onSelect={openChat} />}
+      {notificationsOpen && <NotificationSheet waterDue={waterReminderDue} activities={activities} readActivityIds={readActivityIds} error={notificationError} onClose={() => setNotificationsOpen(false)} onWater={() => void waterPlant()} onReadActivity={(id) => setReadActivityIds((current) => current.includes(id) ? current : [...current, id])} onOpenActivity={(activity) => { setPendingActivity(activity); setTab("community"); setNotificationsOpen(false); }} />}
+      {friendsOpen && <FriendListSheet friends={friends} incomingRequests={incomingRequests} unreadByChat={unreadByChat} onClose={() => setFriendsOpen(false)} onSelect={openChat} onAccept={acceptFriendRequest} />}
       {chatOpen && activeChatFriend && <ChatSheet friend={activeChatFriend} userId={user.uid} userName={state.profile.displayName} onClose={() => setChatOpen(false)} />}
     </div>
     </LanguageContext.Provider>
