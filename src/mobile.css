@@ -114,12 +114,14 @@
   .post-composer { align-self: flex-end; max-height: 96vh; max-height: 96dvh; }
   .composer-fields { grid-template-columns: 1fr; }
   .post-detail-sheet { display: block; height: 94vh; height: 94dvh; max-height: 94vh; max-height: 94dvh; align-self: flex-end; overflow-y: auto; }
-  .post-detail-sheet > img { height: 48vh; height: 48dvh; }
+  .post-detail-sheet > img { height: 38vh; height: 38dvh; }
   .post-detail-side { height: auto; min-height: 420px; display: flex; flex-direction: column; overflow: visible; }
-  .post-copy { overflow: visible; }
-  .comments { order: 2; min-height: 110px; }
-  .post-detail-actions { order: 1; }
-  .comment-box { order: 3; }
+  .post-detail-user { order: 0; }
+  .post-copy { order: 1; overflow: visible; }
+  .comment-box { position: sticky; z-index: 3; bottom: 0; order: 2; box-shadow: 0 -8px 16px color-mix(in srgb, var(--paper) 90%, transparent); }
+  .post-detail-actions { order: 3; }
+  .post-tagged-pieces { order: 4; }
+  .comments { order: 5; min-height: 110px; }
   .settings-sheet, .point-shop-sheet, .notification-sheet { align-self: flex-end; }
   .coupon-card { grid-template-columns: auto 1fr; }
   .coupon-card > button { grid-column: 1 / -1; width: 100%; }
